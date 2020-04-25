@@ -71,7 +71,11 @@ public class EngineControl : MonoBehaviour
 //=======================================================
 	public virtual void onEngineStart()
 	{
-		GetComponent<ParticleSystem>().Play();
+		ParticleSystem particleSystem = GetComponent<ParticleSystem>();
+		if (particleSystem != null)
+		{
+			particleSystem.Play();
+		}
 		if (engineStartSound)
 		{
 			WorldControl.playOneShotFX (engineStartSound);
@@ -80,7 +84,11 @@ public class EngineControl : MonoBehaviour
 
 	public virtual void onEngineStop()
 	{
-		GetComponent<ParticleSystem>().Stop();
+		ParticleSystem particleSystem = GetComponent<ParticleSystem>();
+		if (particleSystem != null)
+		{
+			particleSystem.Stop();
+		}
 		WorldControl.stopConstFX();
 		if (engineStopSound)
 		{

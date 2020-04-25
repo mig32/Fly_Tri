@@ -5,7 +5,11 @@ public class ImpulseEngineControl : EngineControl {
 
 	override public void onEngineStart()
 	{
-		GetComponent<ParticleSystem>().Emit(100);
+		ParticleSystem particleSystem = GetComponent<ParticleSystem>();
+		if (particleSystem != null)
+		{
+			particleSystem.Play();
+		}
 		transform.parent.GetComponent<Rigidbody2D>().AddForce ((Vector2)transform.parent.up * m_info.enginePower * Time.deltaTime);
 		if (engineStartSound)
 		{
