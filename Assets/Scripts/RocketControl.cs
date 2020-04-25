@@ -1,16 +1,40 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class RocketControl : MonoBehaviour {
-	public int enginePower = 1500;
-	public int rotationSpeed = 300;
-	public int maxSpeed = 30;
-	public Sprite destroyedRocketSprite;
-	public string loseMessage = "LOOOOSEEER!!!! HA! HA! HA!";
-	public string winMessage = "OK you won... Next level...";
+[System.Serializable]
+public class RocketInfo
+{
+	public float current_max_agility;
+	public float agility;
+	public float current_min_agility;
+	public float current_max_mass;
+	public float mass;
+	public float current_min_mass;
+}
 
-	private bool b_isAlive = true;
-	private LoadMap map_class;
+
+public class RocketControl : MonoBehaviour {
+	public string rocketName;
+	public RocketInfo m_info;
+	public float max_agility;
+	public float min_agility;
+	public float agility_upgrade_step;
+	public int agility_upgrade_cost;
+	public float max_mass;
+	public float min_mass;
+	public float mass_upgrade_step;
+	public int mass_upgrade_cost;
+	public int cost;
+
+	public AudioClip crashSound;
+	public GameObject exlposionAnimation;
+
+	public Sprite rocketSprite;
+	public Sprite destroyedRocketSprite;
+	private GameObject m_engine;
+	private EngineControl m_engineControl;
+
+	public bool b_isAlive = true;
 
 	// Update is called once per frame
 	void Update () 
@@ -18,90 +42,143 @@ public class RocketControl : MonoBehaviour {
 		if (b_isAlive)
 		{
 			if (Input.GetButtonDown ("Jump")) 
-				particleEmitter.emit = true;
-			if (Input.GetButton ("Jump"))
-				rigidbody2D.AddForce ((Vector2)transform.up * enginePower * Time.deltaTime);
+			{
+				m_engineControl.startEngine();
+			}
 			if (Input.GetButtonUp ("Jump")) 
-				particleEmitter.emit = false;
+				m_engineControl.stopEngine();
 
 			float rotation = Input.GetAxis ("Horizontal");
 			if (rotation != 0) {
-				rigidbody2D.fixedAngle = true;
+				GetComponent<Rigidbody2D>().fixedAngle = true;
 				if (rotation > 0)
-					transform.Rotate (0, 0, -1 * rotationSpeed * Time.deltaTime);
+					transform.Rotate (0, 0, -1 * (m_info.agility/(GetComponent<Rigidbody2D>().angularDrag/3 + 1)) * Time.deltaTime);
 				else
-					transform.Rotate (0, 0, rotationSpeed * Time.deltaTime);
-				rigidbody2D.fixedAngle = false;
-				//rigidbody2D.AddTorque(0.0f);
-				//rigidbody2D.AddTorque(-rotation * rotationSpeed * Time.deltaTime);
-				//Debug.Log(rotation);
+					transform.Rotate (0, 0, (m_info.agility/(GetComponent<Rigidbody2D>().angularDrag/3 + 1)) * Time.deltaTime);
+				GetComponent<Rigidbody2D>().fixedAngle = false;
 			}
 		}
-		checkSpeed ();
+	}
+
+	public void setEngine(GameObject engine)
+	{
+		//Debug.Log ("Set Engine old = " + m_engine);
+		GameObject temp_engine = GameObject.Instantiate (engine) as GameObject;
+		m_engine = temp_engine; 
+		m_engine.transform.parent = transform;
+		m_engine.transform.localPosition = new Vector3(0,0,0);
+		m_engine.transform.localRotation = Quaternion.identity;
+		m_engineControl = m_engine.GetComponent<EngineControl> ();
+
+		LoadEngineParameners ();
+		//Debug.Log ("Set Engine new = " + m_engine);
+	}
+
+	public void LoadEngineParameners()
+	{
+		if (GameProgress.buyedEngines.ContainsKey(m_engineControl.engineName))
+		{
+			m_engineControl.m_info = GameProgress.buyedEngines[m_engineControl.engineName];
+		}
+	}
+
+	public GameObject getEngine()
+	{
+		return m_engine;
+	}
+
+	public EngineControl getEngineControl()
+	{
+		return m_engineControl;
 	}
 
 	void OnCollisionEnter2D(Collision2D myCollision) 
 	{   
-		if (b_isAlive) 
+		if (b_isAlive && myCollision.otherCollider.tag != WorldControl.ROCKET_LANDING_TAG) 
 		{
 			b_isAlive = false;
-			rigidbody2D.fixedAngle = false;
-			if (destroyedRocketSprite) {
-					gameObject.GetComponent<SpriteRenderer> ().sprite = destroyedRocketSprite;
-			}
-			map_class = GameObject.Find ("map").GetComponent<LoadMap>();
-			//Destroy (gameObject, 5);
-			map_class.showMessage(loseMessage, Color.red);
-			StartCoroutine (restartScene ());
+			WorldControl.playOneShotFX(crashSound);
+			m_engineControl.stopEngine();
+			GetComponent<Rigidbody2D>().fixedAngle = false;
 
-			//Debug.Log(myCollision.gameObject.name);  
+			WorldControl.clearTempScore();
+			GameProgress.score -= (int)((cost + m_engineControl.cost)/2);
+			WorldControl.showScore();
+
+			if (exlposionAnimation)
+			{
+				//GameObject explosion = GameObject.Instantiate(exlposionAnimation) as GameObject;
+				//explosion.GetComponent<SpriteRenderer>().sortingLayerName = "Foreground";
+				//explosion.transform.position = transform.position;
+				//explosion.GetComponent<ParticleSystem>().Emit(100);
+
+			}
+			if (destroyedRocketSprite) 
+			{
+					gameObject.GetComponent<SpriteRenderer>().sprite = destroyedRocketSprite;
+			}
+			WorldControl.startTimer(2.0f, false);
 		}
-	}
-	IEnumerator restartScene()
-	{
-		yield return new WaitForSeconds(2.0f);
-		map_class.hideMessage();
-		map_class.restartLevel();
 	}
 
 	void OnTriggerEnter2D(Collider2D myCollision) 
 	{   
-		if (b_isAlive && myCollision.gameObject.name == "end_location") 
+		if (b_isAlive && myCollision.gameObject.name == WorldControl.END_LOCATION_NAME) 
 		{
-			map_class = GameObject.Find ("map").GetComponent<LoadMap>();
-			b_isAlive = false;
-			map_class.showMessage(winMessage, Color.green);
-			StartCoroutine(startNextLevel());
+			//TODO не момнгьпбнпя победа а надо продержаться 2 секунды
+			WorldControl.startTimer(WorldControl.WIN_TIMER, true);
 		}
-		//Debug.Log(myCollision.gameObject.name);  
-	}
-	IEnumerator startNextLevel()
-	{
-		yield return new WaitForSeconds(2.0f);
-		map_class.hideMessage();
-		map_class.loadNextLevel();
-	}
-	
-	void checkSpeed()
-	{
-		float x=rigidbody2D.velocity.x, y=rigidbody2D.velocity.y;
-		if (x > maxSpeed)
+		else if (b_isAlive && myCollision.tag == WorldControl.COLLECTIBLES_TAG)
 		{
-			x = maxSpeed;
+			if (WorldControl.getMap().GetComponent<MapInfo>().collectSound)
+			{
+				WorldControl.playOneShotFX(WorldControl.getMap().GetComponent<MapInfo>().collectSound);
+			}
+			GameObject.Destroy(myCollision.gameObject);
+			WorldControl.addScore(WorldControl.getMapInfo().coinCost);
 		}
-		else if (x < -maxSpeed)
-		{
-			x = -maxSpeed;
-		}
-		if (y > maxSpeed)
-		{
-			y = maxSpeed;
-		}
-		else if (y < -maxSpeed)
-		{
-			y = -maxSpeed;
-		}
-		rigidbody2D.velocity = new Vector2(x, y);
 	}
 
+	void OnTriggerExit2D(Collider2D myCollision) 
+	{   
+		if (b_isAlive && myCollision.gameObject.name == WorldControl.END_LOCATION_NAME) 
+		{
+			WorldControl.stopTimer();
+		}
+	}
+
+	public void upgradeHullAgility()
+	{
+		m_info.current_max_agility += agility_upgrade_step;
+		if (m_info.current_max_agility > max_agility)
+		{
+			m_info.current_max_agility = max_agility;
+		}
+		m_info.current_min_agility -= agility_upgrade_step;
+		if (m_info.current_min_agility < min_agility)
+		{
+			m_info.current_min_agility = min_agility;
+		}
+		WorldControl.addScore (-agility_upgrade_cost);
+	}
+
+	public void upgradeHullMass()
+	{
+		m_info.current_min_mass -= mass_upgrade_step;
+		if (m_info.current_min_mass < min_mass)
+		{
+			m_info.current_min_mass = min_mass;
+		}
+		WorldControl.addScore (-mass_upgrade_cost);
+	}
+
+	public void setMass(float rocketMass)
+	{
+		m_info.mass = rocketMass;
+	}
+
+	public float getMass()
+	{
+		return m_info.mass;
+	}
 }

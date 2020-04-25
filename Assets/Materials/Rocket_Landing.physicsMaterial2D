@@ -6,5 +6,5 @@ PhysicsMaterial2D:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_Name: Rocket_Landing
-  friction: .5
+  friction: 1
   bounciness: .200000003

@@ -2,154 +2,281 @@
 using System.Collections;
 
 public class Menu : MonoBehaviour {
-	public int menu_height = 300;
-	public int menu_width = 200;
-	public float soundVolume = 8.0f;
-	public float gameSpeed = 1.0f;
+	private const int CAMERA_SHOW_MENU = 256;
+	private const int CAMERA_SHOW_ALL = -1;
+	public int menu_height = 450;
+	public int menu_width = 300;
+	public MenuChooseMap menuChooseMap;
+	public MenuMapDiscription menuMapDiscription;
+	public MenuRocketGarage menuRocketGarage;
+	public MenuShop menuShop;
 
-	public bool b_isShowMenu = true;
-	public bool b_isNewGameButton = true;
-	public bool b_isRestartGameButton = false;
-	public bool b_isResumeGameButton = false;
-	public bool b_isChooseLevelButton = false;
-	public bool b_isSoundSlider = true;
-	public bool b_isExitButton = true;
+	private bool b_isShowMenu = true;
+	private bool b_isChooseLevelMenu = false;
+	private bool b_isTestChamberMenu = false;
+	private bool b_isMapDiscriptionMenu = false;
+	private bool b_isGarageMenu = false;
+	private bool b_isShopMenu = false;
+	private bool b_areYouShureMenu = false;
 
-	public bool b_isChooseLevelMenu = false;
-	public Vector2 scrollPosition = new Vector2(0,0);
+	private bool b_isStartMenuButtons = true;
+	private bool b_isIngameButtons = false;
+	private bool b_isTester = false;
 
-	private LoadMap map_class;
+	public void setMainMenuStatus(bool isStarMenu)
+	{
+		b_isStartMenuButtons = isStarMenu;
+	}
+
+	public void playMenuMusic()
+	{
+		WorldControl.playMusic(Resources.Load(AudioList.getAudioPath(WorldControl.getAudioNames()[0])) as AudioClip, 1.5f);
+	}
 
 	void OnGUI() {
+		GUI.color = Color.green;
 		int menu_top = (Screen.height - menu_height)/2;
 		int menu_left = (Screen.width - menu_width)/2;
-		if (b_isShowMenu) 
+
+		if (b_areYouShureMenu)
 		{
-			b_isChooseLevelMenu = false;
+			GUILayout.Label(Localization.T_DELETE_ALL_MESSAGE);
+			GUILayout.BeginHorizontal();
+				if (GUILayout.Button (Localization.T_YES)) 
+				{
+					GameProgress.Clear();
+					b_areYouShureMenu = false;
+				}
+				if (GUILayout.Button (Localization.T_NO)) 
+				{
+					b_areYouShureMenu = false;
+				}
+			GUILayout.EndHorizontal();
+		}
+		else if (b_isShopMenu)
+		{
+			menuShop.showMenu();
+		}
+
+		else if (b_isGarageMenu)
+		{
+			menuRocketGarage.showMenu();
+		}
+
+		else if (b_isMapDiscriptionMenu) 
+		{
+			menuMapDiscription.showMenu();
+		}
+
+		else if (b_isChooseLevelMenu) 
+		{
+			menuChooseMap.showMenu();
+		}
+
+		else if (b_isShowMenu) 
+		{
 			GUILayout.BeginArea (new Rect (menu_left, menu_top, menu_width, menu_height));
-			if ((b_isNewGameButton) && (GUILayout.Button ("Новыя игра"))) {
-				map_class = gameObject.GetComponent<LoadMap> ();
-				map_class.startNewGame ();
-				//Debug.Log ("new game");  
-				ingameMenu();
-				hideMenu();
-			}
-			if ((b_isRestartGameButton) && (GUILayout.Button ("Начать заного"))) {
-				map_class = gameObject.GetComponent<LoadMap> ();
-				map_class.restartLevel ();
-				//Debug.Log ("new game");  
-				hideMenu();
-			}
-			if (b_isResumeGameButton) {
+			if (b_isStartMenuButtons)
+			{//Или кнопка новая игра
+			    if (GUILayout.Button (Localization.T_NEW_GAME)) 
+				{
+					menuChooseMap.init(this);
+					showMapChooserMenu();
+					b_isTestChamberMenu = false;
+				}
 				GUILayout.FlexibleSpace ();
-				if (GUILayout.Button ("Продолжить")) {
+				GUI.color = Color.red;
+				if (GUILayout.Button (Localization.T_DELETE_SAVE)) 
+				{
+					b_areYouShureMenu = true;
+				}
+				GUI.color = Color.green;
+			}
+			else if (b_isIngameButtons)
+			{//Или кнопки "Начать заново" и "Продолжить"
+				
+				if (GUILayout.Button (Localization.T_RESUME_GAME)) 
+				{
 					hideMenu();
 				}
-			}
-			if (b_isChooseLevelButton) {
 				GUILayout.FlexibleSpace ();
-				if (GUILayout.Button ("Выбрать карту")) {
+				if (GUILayout.Button (Localization.T_RESTART_GAME)) 
+				{
+					WorldControl.restartLevel ();
+					hideMenu();
+				}
+				GUILayout.FlexibleSpace ();
+				if (GUILayout.Button (Localization.T_END_LEVEL)) 
+				{
+					WorldControl.endLevel();
+					WorldControl.stopTimer();
+					setMainMenuStatus(true);
+					showMapDiscriptionMenu();
+				}
+			}
+			else
+			{
+				if (GUILayout.Button (Localization.T_SELECT_LEVEL)) 
+				{
 					showMapChooserMenu();
 				}
 			}
-			if (b_isSoundSlider) {
-				GUILayout.FlexibleSpace ();
-				GUILayout.Label("Громкость звука");
-				soundVolume = GUILayout.HorizontalScrollbar(soundVolume, 1.0F, 0.0F, 10.0F);
-			}
-			
-			if (b_isExitButton) {
-				GUILayout.FlexibleSpace ();
-				if (GUILayout.Button ("Выход")) {
-					Application.Quit ();
-					//Debug.Log ("exit");  
-				}
-			}
-			GUILayout.EndArea ();
-		}
-
-		if (b_isChooseLevelMenu) 
-		{
-			b_isShowMenu = false;
-			GUILayout.BeginArea (new Rect (20, 20, Screen.width - 40, Screen.height - 40));
-				scrollPosition = GUILayout.BeginScrollView(scrollPosition);
-				map_class = gameObject.GetComponent<LoadMap>();
-				GUILayout.BeginHorizontal();
-					int i = 0;
-					foreach (string map_name in map_class.getMapNames())
+			GUILayout.FlexibleSpace ();
+			GUILayout.Label(Localization.T_SOUND_VOLUME);
+			WorldControl.setSoundVolume(GUILayout.HorizontalSlider(WorldControl.getSoundVolume(), WorldControl.MIN_SOUND_VOLUME, WorldControl.MAX_SOUND_VOLUME));
+			GUILayout.Space(10);
+			GUILayout.Label(Localization.T_FX_VOLUME);
+			WorldControl.setFXVolume(GUILayout.HorizontalSlider(WorldControl.fxVolume, WorldControl.MIN_SOUND_VOLUME, WorldControl.MAX_SOUND_VOLUME));
+			GUILayout.FlexibleSpace ();
+			if (b_isStartMenuButtons) 
+			{//Если мы в клавном меню, то есть кнопки "Тестовая камера" и "Выход"
+				if (b_isTester)
+				{
+					if (GUILayout.Button (Localization.T_TEST_CHAMBER))
 					{
-						i++;
-						if (GUILayout.Button (map_name))
-						{
-							b_isChooseLevelMenu = false;
-							map_class.startNewGame(i);
-							ingameMenu();
-							hideMenu();
-						}
+						TestChamberControl.loadTestChamber(this);
+						hideMenu();
+						b_isStartMenuButtons = false;
+						b_isTestChamberMenu = true;
 					}
-					GUILayout.EndHorizontal();
-				GUILayout.EndScrollView();
+					GUILayout.FlexibleSpace ();
+				}
+				if (GUILayout.Button (Localization.T_SAVE)) 
+				{
+					GameProgress.Save();
+				}
+				GUILayout.FlexibleSpace ();
+				if (GUILayout.Button (Localization.T_EXIT)) 
+				{
+					GameProgress.Save();
+					Application.Quit ();
+				}
+			}//Если мы в внутреигровом меню, то вместо них кнопка "Вернуться в меню"
+			else if (GUILayout.Button (Localization.T_BACT_TO_MENU)) 
+			{
+				WorldControl.endLevel();
+				setMainMenuStatus(true);
+				b_isTestChamberMenu = false;
+				showMenu();
+				playMenuMusic();
+			}
 			GUILayout.EndArea ();
 		}
-	}
 
-	public void startMenu()
-	{
-		b_isNewGameButton = true;
-		b_isRestartGameButton = false;
-		b_isResumeGameButton = false;
-	}
-
-	public void ingameMenu()
-	{
-		b_isNewGameButton = false;
-		b_isRestartGameButton = true;
-		b_isResumeGameButton = true;
+		else if (b_isTestChamberMenu)
+		{
+			TestChamberControl.showTestChamberMenu();
+		}
 	}
 
 	public void hideMenu()
 	{
+		b_isStartMenuButtons = false;
 		b_isShowMenu = false;
 		b_isChooseLevelMenu = false;
+		b_isMapDiscriptionMenu = false;
+		b_isGarageMenu = false;
+		b_isShopMenu = false;
+		b_isIngameButtons = true;
+		WorldControl.getCamera ().GetComponent<Camera>().cullingMask = CAMERA_SHOW_ALL;
+		WorldControl.unPause();
+		WorldControl.showScore ();
 	}
 
 	public void showMenu()
 	{
 		b_isShowMenu = true;
 		b_isChooseLevelMenu = false;
+		b_isMapDiscriptionMenu = false;
+		b_isGarageMenu = false;
+		b_isShopMenu = false;
+		b_isIngameButtons = false;
+		WorldControl.hideScore ();
 	}
 
 	public void showMapChooserMenu()
 	{
-		b_isShowMenu = false;
+		b_isShowMenu = true;
 		b_isChooseLevelMenu = true;
+		b_isMapDiscriptionMenu = false;
+		b_isGarageMenu = false;
+		b_isShopMenu = false;
+		b_isIngameButtons = false;
+		WorldControl.hideScore ();
 	}
 
-	void onStart () 
+	public void showMapDiscriptionMenu()
 	{
-		startMenu ();
+		b_isShowMenu = true;
+		b_isChooseLevelMenu = true;
+		b_isMapDiscriptionMenu = true;
+		b_isGarageMenu = false;
+		b_isShopMenu = false;
+		b_isIngameButtons = false;
+		WorldControl.getCamera ().GetComponent<Camera>().cullingMask = CAMERA_SHOW_MENU;
+		WorldControl.showScore ();
+		WorldControl.pause();
+	}
+
+	public void showGarageMenu()
+	{
+		b_isGarageMenu = true;
+		b_isShopMenu = false;
+		b_isIngameButtons = false;
+	}
+
+	public void showShopMenu()
+	{
+		b_isShopMenu = true;
+		b_isIngameButtons = false;
+	}
+
+	public void onMenuButton()
+	{
+		if (b_areYouShureMenu) 
+		{
+			b_areYouShureMenu = false;
+		} 
+		else if (b_isShopMenu) 
+		{
+			menuShop.exitMenu();
+		} 
+		else if (b_isGarageMenu) 
+		{
+			menuRocketGarage.exitMenu();
+		} 
+		else if (b_isMapDiscriptionMenu) 
+		{
+			showMapChooserMenu();
+		} 
+		else if (b_isChooseLevelMenu) 
+		{
+			showMenu();
+		} 
+		else if (b_isShowMenu)
+		{
+			if (b_isIngameButtons) 
+			{
+				b_isShowMenu = false;
+				WorldControl.getCamera ().GetComponent<Camera>().cullingMask = CAMERA_SHOW_ALL;
+				WorldControl.unPause();
+			}
+		}
+		else
+		{
+			b_isShowMenu = true;
+			WorldControl.hideScore ();
+			WorldControl.getCamera ().GetComponent<Camera>().cullingMask = CAMERA_SHOW_MENU;
+			WorldControl.pause();
+		}
 	}
 
 	void Update () 
 	{
-		if (Input.GetButtonDown ("Menu"))
+		//Debug.Log (WorldControl.getCamera ().camera.cullingMask);
+		if (Input.GetButtonDown ("Cancel"))
 		{
-			if (b_isShowMenu) 
-			{
-				hideMenu();
-			}
-			else
-			{
-				showMenu();
-			}
-		}
-		if (b_isShowMenu || b_isChooseLevelMenu) 
-		{
-			Time.timeScale = 0.0f;
-		} 
-		else 
-		{
-			Time.timeScale = gameSpeed;
+			onMenuButton();
 		}
 	}
 }
