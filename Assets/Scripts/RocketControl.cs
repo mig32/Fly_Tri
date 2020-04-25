@@ -10,8 +10,8 @@ public class RocketInfo
 	public float current_max_mass;
 	public float mass;
 	public float current_min_mass;
+	public float current_durability = 1.5;
 }
-
 
 public class RocketControl : MonoBehaviour {
 	public string rocketName;
@@ -32,10 +32,17 @@ public class RocketControl : MonoBehaviour {
 	public Sprite rocketSprite;
 	public Sprite destroyedRocketSprite;
 	private GameObject m_engine;
+	private GameObject m_exlposionAnimation;
 	private EngineControl m_engineControl;
 
+	public float f_currentHealth;
 	public bool b_isAlive = true;
 
+	public void Reset()
+	{
+		b_isAlive = true;
+		f_currentHealth = m_info.current_durability;
+	}
 	// Update is called once per frame
 	void Update () 
 	{
@@ -96,28 +103,35 @@ public class RocketControl : MonoBehaviour {
 	{   
 		if (b_isAlive && myCollision.otherCollider.tag != WorldControl.ROCKET_LANDING_TAG) 
 		{
-			b_isAlive = false;
-			WorldControl.playOneShotFX(crashSound);
-			m_engineControl.stopEngine();
-			GetComponent<Rigidbody2D>().fixedAngle = false;
-
-			WorldControl.clearTempScore();
-			GameProgress.score -= (int)((cost + m_engineControl.cost)/2);
-			WorldControl.showScore();
-
 			if (exlposionAnimation)
 			{
-				//GameObject explosion = GameObject.Instantiate(exlposionAnimation) as GameObject;
-				//explosion.GetComponent<SpriteRenderer>().sortingLayerName = "Foreground";
-				//explosion.transform.position = transform.position;
-				//explosion.GetComponent<ParticleSystem>().Emit(100);
+				if (m_exlposionAnimation == null)
+				{
+					m_exlposionAnimation = GameObject.Instantiate(exlposionAnimation) as GameObject;
+				}
 
+				m_exlposionAnimation.transform.position = transform.position;
+				m_exlposionAnimation.GetComponent<ParticleSystem>().Play();
 			}
-			if (destroyedRocketSprite) 
+			f_currentHealth -= myCollision.relativeVelocity.magnitude;
+			if (f_currentHealth <= 0)
 			{
+				b_isAlive = false;
+				WorldControl.playOneShotFX(crashSound);
+				m_engineControl.stopEngine();
+				GetComponent<Rigidbody2D>().freezeRotation = false;
+
+				WorldControl.clearTempScore();
+				GameProgress.score -= (int)((cost + m_engineControl.cost) / 2);
+				WorldControl.showScore();
+
+				if (destroyedRocketSprite)
+				{
 					gameObject.GetComponent<SpriteRenderer>().sprite = destroyedRocketSprite;
+				}
+
+				WorldControl.startTimer(2.0f, false);
 			}
-			WorldControl.startTimer(2.0f, false);
 		}
 	}
 

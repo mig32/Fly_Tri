@@ -320,7 +320,7 @@ public class WorldControl : MonoBehaviour {
 		getRocket ().transform.position = m_map.transform.Find (START_LOCATION_NAME).position; // Поставим ракету на начельную позицию на карте
 		getRocket ().GetComponent<SpriteRenderer>().enabled = true;
 		m_rocket.GetComponent<Rigidbody2D>().isKinematic = false;
-		m_rocketControl.b_isAlive = true;
+		m_rocketControl.Reset();
 		unPause();
 	}
 

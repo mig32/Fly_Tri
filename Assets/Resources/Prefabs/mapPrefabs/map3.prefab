@@ -83,7 +83,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4781289756172426481}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 3.08, y: 4.61, z: 0}
+  m_LocalPosition: {x: 3.06, y: 4.94, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 4403302401248438332}
@@ -102,7 +102,7 @@ BoxCollider2D:
   m_IsTrigger: 1
   m_UsedByEffector: 1
   m_UsedByComposite: 0
-  m_Offset: {x: 0, y: 0.34}
+  m_Offset: {x: 0, y: 0}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0, y: 0}
@@ -220,6 +220,16 @@ PrefabInstance:
     - target: {fileID: 6726614996765083281, guid: 308226473cfc90c46ae7f0bd72318a7b,
         type: 3}
       propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6726614996765083281, guid: 308226473cfc90c46ae7f0bd72318a7b,
+        type: 3}
+      propertyPath: m_SortingLayerID
+      value: 1040289429
+      objectReference: {fileID: 0}
+    - target: {fileID: 6726614996765083281, guid: 308226473cfc90c46ae7f0bd72318a7b,
+        type: 3}
+      propertyPath: m_SortingLayer
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7398864588779653166, guid: 308226473cfc90c46ae7f0bd72318a7b,
