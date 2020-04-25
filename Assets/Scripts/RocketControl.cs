@@ -10,7 +10,7 @@ public class RocketInfo
 	public float current_max_mass;
 	public float mass;
 	public float current_min_mass;
-	public float current_durability = 1.5;
+	public float current_durability = 1.5f;
 }
 
 public class RocketControl : MonoBehaviour {
