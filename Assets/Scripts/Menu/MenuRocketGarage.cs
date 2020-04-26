@@ -31,7 +31,11 @@ public class MenuRocketGarage : MonoBehaviour {
 	public void init(Menu menu, GameObject rocket)
 	{
 		m_rocket = GameObject.Instantiate (rocket) as GameObject;
-		WorldControl.getRocket ().SetActive (false);
+		WorldControl wc = WorldControl.GetInstance();
+		if (wc != null)
+		{
+			wc.getRocket().SetActive(false);
+		}
 		m_rocketControl = m_rocket.GetComponent<RocketControl>();
 		m_engine = GameObject.FindWithTag(WorldControl.ENGINE_TAG);
 		m_engine.transform.parent = transform.parent;
@@ -146,6 +150,7 @@ public class MenuRocketGarage : MonoBehaviour {
 
 	public void showMenu()
 	{
+		WorldControl wc = WorldControl.GetInstance();
 		GUILayout.BeginArea (new Rect (20, 20, Screen.width - 40, Screen.height - 40));
 		GUILayout.BeginHorizontal();
 			GUILayout.BeginVertical();
@@ -153,8 +158,10 @@ public class MenuRocketGarage : MonoBehaviour {
 				{
 					if (!GameProgress.buyedRockets.ContainsKey(m_rocketControl.rocketName))
 					{
-						WorldControl.addScore(m_rocketControl.cost);
-						
+						if (wc != null)
+						{
+							wc.addScore(m_rocketControl.cost);
+						}
 					}
 					mainMenu.menuShop.init (mainMenu, false);
 					mainMenu.showShopMenu();
@@ -164,7 +171,10 @@ public class MenuRocketGarage : MonoBehaviour {
 				{
 					if (!GameProgress.buyedEngines.ContainsKey(m_engineControl.engineName))
 					{
-						WorldControl.addScore(m_engineControl.cost);
+						if (wc != null)
+						{
+							wc.addScore(m_engineControl.cost);
+						}
 					}
 					mainMenu.menuShop.init (mainMenu, true);
 					mainMenu.showShopMenu();
@@ -294,16 +304,19 @@ public class MenuRocketGarage : MonoBehaviour {
 			GUILayout.Space(20);
 			if (GUILayout.Button(Localization.T_ACCEPT))
 			{
-				WorldControl.getRocket ().SetActive (true);
-				saveParameters();
-				WorldControl.chooseRocket(m_rocket);
-				WorldControl.chooseEngine(m_engine);
-				if (m_rocket) Destroy(m_rocket);
-				if (m_engine) Destroy(m_engine);
-				WorldControl.saveScore();
-				GameProgress.setBuyedEngine(m_engineControl.engineName, m_engineControl.m_info);
-				GameProgress.setBuyedRocket(m_rocketControl.rocketName, m_rocketControl.m_info);
-				mainMenu.showMapDiscriptionMenu();
+				if (wc != null)
+				{
+					wc.getRocket().SetActive(true);
+					saveParameters();
+					wc.chooseRocket(m_rocket);
+					wc.chooseEngine(m_engine);
+					if (m_rocket) Destroy(m_rocket);
+					if (m_engine) Destroy(m_engine);
+					wc.saveScore();
+					GameProgress.setBuyedEngine(m_engineControl.engineName, m_engineControl.m_info);
+					GameProgress.setBuyedRocket(m_rocketControl.rocketName, m_rocketControl.m_info);
+					mainMenu.showMapDiscriptionMenu();
+				}
 			}
 		GUILayout.EndHorizontal();
 		GUILayout.EndArea ();
@@ -324,10 +337,14 @@ public class MenuRocketGarage : MonoBehaviour {
 
 	public void exitMenu()
 	{
-		WorldControl.getRocket ().SetActive (true);
+		WorldControl wc = WorldControl.GetInstance();
+		if (wc != null)
+		{
+			wc.clearTempScore();
+			wc.getRocket().SetActive(true);
+		}
 		if (m_rocket) Destroy(m_rocket);
 		if (m_engine) Destroy(m_engine);
-		WorldControl.clearTempScore();
 		mainMenu.showMapDiscriptionMenu();
 	}
 }

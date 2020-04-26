@@ -9,18 +9,23 @@ public class MenuMapDiscription : MonoBehaviour {
 	{
 		m_mapInfo = mapInfo;
 		mainMenu = menu;
-		if (mapInfo.music)
+		WorldControl wc = WorldControl.GetInstance();
+		if (wc != null)
 		{
-			WorldControl.playMusic(mapInfo.music);
-		}
-		else
-		{
-			WorldControl.playNextMusic();
+			if (mapInfo.music)
+			{
+				wc.playMusic(mapInfo.music);
+			}
+			else
+			{
+				wc.playNextMusic();
+			}
 		}
 	}
 
 	public void showMenu()
 	{
+		WorldControl wc = WorldControl.GetInstance();
 		GUILayout.BeginArea (new Rect (20, 20, Screen.width - 40, Screen.height - 40));
 		GUILayout.BeginHorizontal();
 			GUILayout.BeginVertical();
@@ -46,19 +51,22 @@ public class MenuMapDiscription : MonoBehaviour {
 			GUILayout.EndVertical();
 			GUILayout.Space(10);
 			GUILayout.BeginVertical();
-				GameObject rocket = WorldControl.getRocket ();
-				RocketControl rocketControl = rocket.GetComponent<RocketControl>();
-				GUILayout.Label(rocketControl.rocketName.ToUpper());
-				GUILayout.Space(10);
-				GUILayout.Label(rocket.GetComponent<SpriteRenderer>().sprite.texture);
-				GUILayout.Label(Localization.T_ROCKET_PARAMETERS + ":");
-				GUILayout.Label("  " + Localization.T_MASS.ToUpper() + ": " + rocketControl.m_info.mass);
-				GUILayout.Label("  " + Localization.T_ENGINE_POWER_CUT.ToUpper() + ": " + rocketControl.getEngine().GetComponent<EngineControl>().getEnginePower());
-				GUILayout.Label("  " + Localization.T_AGILITY_CUT.ToUpper() + ": " + rocketControl.m_info.agility);
-				if (GUILayout.Button(Localization.T_ROCKET_EDIT))
+				if (wc != null)
 				{
-					mainMenu.menuRocketGarage.init(mainMenu, rocket);
-					mainMenu.showGarageMenu();
+					GameObject rocket = wc.getRocket();
+					RocketControl rocketControl = rocket.GetComponent<RocketControl>();
+					GUILayout.Label(rocketControl.rocketName.ToUpper());
+					GUILayout.Space(10);
+					GUILayout.Label(rocket.GetComponent<SpriteRenderer>().sprite.texture);
+					GUILayout.Label(Localization.T_ROCKET_PARAMETERS + ":");
+					GUILayout.Label("  " + Localization.T_MASS.ToUpper() + ": " + rocketControl.m_info.mass);
+					GUILayout.Label("  " + Localization.T_ENGINE_POWER_CUT.ToUpper() + ": " + rocketControl.getEngine().GetComponent<EngineControl>().getEnginePower());
+					GUILayout.Label("  " + Localization.T_AGILITY_CUT.ToUpper() + ": " + rocketControl.m_info.agility);
+					if (GUILayout.Button(Localization.T_ROCKET_EDIT))
+					{
+						mainMenu.menuRocketGarage.init(mainMenu, rocket);
+						mainMenu.showGarageMenu();
+					}
 				}
 			GUILayout.EndVertical();
 		GUILayout.EndHorizontal();
@@ -66,7 +74,10 @@ public class MenuMapDiscription : MonoBehaviour {
 		GUILayout.BeginHorizontal();
 			if (GUILayout.Button(Localization.T_START_MAP))
 			{
-				WorldControl.loadLevel(m_mapInfo.mapName);
+				if (wc != null)
+				{
+					wc.loadLevel(m_mapInfo.mapName);
+				}
 				mainMenu.setMainMenuStatus(false);
 				mainMenu.hideMenu();
 			}

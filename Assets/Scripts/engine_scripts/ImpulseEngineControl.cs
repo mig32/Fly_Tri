@@ -13,7 +13,11 @@ public class ImpulseEngineControl : EngineControl {
 		transform.parent.GetComponent<Rigidbody2D>().AddForce ((Vector2)transform.parent.up * m_info.enginePower * Time.deltaTime);
 		if (engineStartSound)
 		{
-			WorldControl.playOneShotFX (engineStartSound);
+			WorldControl wc = WorldControl.GetInstance();
+			if (wc != null)
+			{
+				wc.playOneShotFX(engineStartSound);
+			}
 		}
 	}
 	

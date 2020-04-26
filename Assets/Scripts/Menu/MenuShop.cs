@@ -13,18 +13,23 @@ public class MenuShop : MonoBehaviour {
 	{
 		mainMenu = menu;
 		b_isEngineShop = isEngine;
-		if (b_isEngineShop)
+		WorldControl wc = WorldControl.GetInstance();
+		if (wc != null)
 		{
-			m_names = WorldControl.getEnginesNames();
-		}
-		else
-		{
-			m_names = WorldControl.getRocketsNames();
+			if (b_isEngineShop)
+			{
+				m_names = wc.getEnginesNames();
+			}
+			else
+			{
+				m_names = wc.getRocketsNames();
+			}
 		}
 	}
 
 	public void showMenu()
 	{
+		WorldControl wc = WorldControl.GetInstance();
 		GUILayout.BeginArea (new Rect (20, 20, Screen.width - 40, 450));
 			scrollPosition=GUILayout.BeginScrollView(scrollPosition);
 				GUILayout.BeginHorizontal();
@@ -87,7 +92,10 @@ public class MenuShop : MonoBehaviour {
 								{
 									if (GUILayout.Button(Localization.T_BUY + " ( " + m_engineControl.cost + " )"))
 									{
-										WorldControl.addScore(-m_engineControl.cost);
+										if (wc != null)
+										{
+											wc.addScore(-m_engineControl.cost);
+										}
 										GameObject newEngine = Resources.Load(RocketList.getEnginePath(name)) as GameObject;
 										mainMenu.menuRocketGarage.setEngine(newEngine);
 										mainMenu.showGarageMenu();
@@ -113,7 +121,10 @@ public class MenuShop : MonoBehaviour {
 								{
 									if (GUILayout.Button(Localization.T_BUY + " ( " + m_rocketControl.cost + " )"))
 									{
-										WorldControl.addScore(-m_rocketControl.cost);
+										if (wc != null)
+										{
+											wc.addScore(-m_rocketControl.cost);
+										}
 										GameObject newRocket = Resources.Load(RocketList.getRocketPath(name)) as GameObject;
 										mainMenu.menuRocketGarage.setRocket(newRocket);
 										mainMenu.showGarageMenu();
@@ -139,18 +150,22 @@ public class MenuShop : MonoBehaviour {
 
 	public void exitMenu()
 	{
-		if (b_isEngineShop)
+		WorldControl wc = WorldControl.GetInstance();
+		if (wc != null)
 		{
-			if (!GameProgress.buyedEngines.ContainsKey(mainMenu.menuRocketGarage.getEngineControl().engineName))
+			if (b_isEngineShop)
 			{
-				WorldControl.addScore(-mainMenu.menuRocketGarage.getEngineControl().cost);
+				if (!GameProgress.buyedEngines.ContainsKey(mainMenu.menuRocketGarage.getEngineControl().engineName))
+				{
+					wc.addScore(-mainMenu.menuRocketGarage.getEngineControl().cost);
+				}
 			}
-		}
-		else
-		{
-			if (!GameProgress.buyedRockets.ContainsKey(mainMenu.menuRocketGarage.getRocketControl().rocketName))
+			else
 			{
-				WorldControl.addScore(-mainMenu.menuRocketGarage.getRocketControl().cost);
+				if (!GameProgress.buyedRockets.ContainsKey(mainMenu.menuRocketGarage.getRocketControl().rocketName))
+				{
+					wc.addScore(-mainMenu.menuRocketGarage.getRocketControl().cost);
+				}
 			}
 		}
 		mainMenu.showGarageMenu();

@@ -117,47 +117,59 @@ public class RocketControl : MonoBehaviour {
 			if (f_currentHealth <= 0)
 			{
 				b_isAlive = false;
-				WorldControl.playOneShotFX(crashSound);
-				m_engineControl.stopEngine();
-				GetComponent<Rigidbody2D>().freezeRotation = false;
-
-				WorldControl.clearTempScore();
-				GameProgress.score -= (int)((cost + m_engineControl.cost) / 2);
-				WorldControl.showScore();
-
-				if (destroyedRocketSprite)
+				WorldControl wc = WorldControl.GetInstance();
+				if (wc != null)
 				{
-					gameObject.GetComponent<SpriteRenderer>().sprite = destroyedRocketSprite;
+					wc.playOneShotFX(crashSound);
+					m_engineControl.stopEngine();
+					GetComponent<Rigidbody2D>().freezeRotation = false;
+
+					wc.clearTempScore();
+					GameProgress.score -= (int)((cost + m_engineControl.cost) / 2);
+					wc.showScore();
+
+					if (destroyedRocketSprite)
+					{
+						gameObject.GetComponent<SpriteRenderer>().sprite = destroyedRocketSprite;
+					}
+
+					wc.startTimer(2.0f, false);
 				}
-
-				WorldControl.startTimer(2.0f, false);
 			}
 		}
 	}
 
-	void OnTriggerEnter2D(Collider2D myCollision) 
-	{   
-		if (b_isAlive && myCollision.gameObject.name == WorldControl.END_LOCATION_NAME) 
+	void OnTriggerEnter2D(Collider2D myCollision)
+	{
+		WorldControl wc = WorldControl.GetInstance();
+		if (wc != null)
 		{
-			//TODO не момнгьпбнпя победа а надо продержаться 2 секунды
-			WorldControl.startTimer(WorldControl.WIN_TIMER, true);
-		}
-		else if (b_isAlive && myCollision.tag == WorldControl.COLLECTIBLES_TAG)
-		{
-			if (WorldControl.getMap().GetComponent<MapInfo>().collectSound)
+			if (b_isAlive && myCollision.gameObject.name == WorldControl.END_LOCATION_NAME)
 			{
-				WorldControl.playOneShotFX(WorldControl.getMap().GetComponent<MapInfo>().collectSound);
+				//TODO не момнгьпбнпя победа а надо продержаться 2 секунды
+				wc.startTimer(WorldControl.WIN_TIMER, true);
 			}
-			GameObject.Destroy(myCollision.gameObject);
-			WorldControl.addScore(WorldControl.getMapInfo().coinCost);
+			else if (b_isAlive && myCollision.tag == WorldControl.COLLECTIBLES_TAG)
+			{
+				if (wc.getMap().GetComponent<MapInfo>().collectSound)
+				{
+					wc.playOneShotFX(wc.getMap().GetComponent<MapInfo>().collectSound);
+				}
+				GameObject.Destroy(myCollision.gameObject);
+				wc.addScore(wc.getMapInfo().coinCost);
+			}
 		}
 	}
 
-	void OnTriggerExit2D(Collider2D myCollision) 
-	{   
-		if (b_isAlive && myCollision.gameObject.name == WorldControl.END_LOCATION_NAME) 
+	void OnTriggerExit2D(Collider2D myCollision)
+	{
+		WorldControl wc = WorldControl.GetInstance();
+		if (wc != null)
 		{
-			WorldControl.stopTimer();
+			if (b_isAlive && myCollision.gameObject.name == WorldControl.END_LOCATION_NAME)
+			{
+				wc.stopTimer();
+			}
 		}
 	}
 
@@ -173,7 +185,11 @@ public class RocketControl : MonoBehaviour {
 		{
 			m_info.current_min_agility = min_agility;
 		}
-		WorldControl.addScore (-agility_upgrade_cost);
+		WorldControl wc = WorldControl.GetInstance();
+		if (wc != null)
+		{
+			wc.addScore(-agility_upgrade_cost);
+		}
 	}
 
 	public void upgradeHullMass()
@@ -183,7 +199,11 @@ public class RocketControl : MonoBehaviour {
 		{
 			m_info.current_min_mass = min_mass;
 		}
-		WorldControl.addScore (-mass_upgrade_cost);
+		WorldControl wc = WorldControl.GetInstance();
+		if (wc != null)
+		{
+			wc.addScore(-mass_upgrade_cost);
+		}
 	}
 
 	public void setMass(float rocketMass)

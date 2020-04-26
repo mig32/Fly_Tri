@@ -51,15 +51,23 @@ public class TestChamberControl : MonoBehaviour {
 	//============================================================================================
 	public static void loadTestChamber(Menu menu)
 	{
-		WorldControl.loadCustomLevel (Resources.Load("Prefabs/TestChamber") as GameObject);
+		WorldControl wc = WorldControl.GetInstance();
+		if (wc != null)
+		{
+			wc.loadCustomLevel(Resources.Load("Prefabs/TestChamber") as GameObject);
+		}
 		mainMenu = menu;
 		initObjects ();
 	}
 
 	private static void initObjects()
 	{
-		m_map = WorldControl.getMap ();
-		m_rocket = WorldControl.getRocket();
+		WorldControl wc = WorldControl.GetInstance();
+		if (wc != null)
+		{
+			m_map = wc.getMap();
+			m_rocket = wc.getRocket();
+		}
 		m_rocket_script = m_rocket.GetComponent<RocketControl> ();
 		if (m_currentMapName != m_map.name)
 		{

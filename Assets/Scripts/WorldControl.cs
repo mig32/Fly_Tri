@@ -100,7 +100,11 @@ public static class GameProgress
 	{
 		PlayerPrefs.DeleteAll();
 		init ();
-		WorldControl.init ();
+		WorldControl wc = WorldControl.GetInstance();
+		if (wc != null)
+		{
+			wc.init();
+		}
 	}
 
 	private static void init()
@@ -152,9 +156,9 @@ public static class GameProgress
 
 public class WorldControl : MonoBehaviour {
 	public const float WIN_TIMER = 2.0f;
-	private static float timer_time;
-	private static bool b_isTimerStarted = false;
-	private static bool b_isWinTimer;
+	private float timer_time;
+	private bool b_isTimerStarted = false;
+	private bool b_isWinTimer;
 
 	public const string ROCKET_CAMERA_NAME = "rocket_camera";
 	public const string PLAYER_OBJECT_NAME = "player";
@@ -171,31 +175,30 @@ public class WorldControl : MonoBehaviour {
 	public const float MAX_SOUND_VOLUME = 1.0f;
 	public const float MIN_SOUND_VOLUME = 0.0f;
 
-	public static Menu m_mainMenu;
+	public Menu m_mainMenu;
 
-	private static string currentLevel = "";
-	private static Transform thisTransform;
-	private static bool b_isPauseOn;
-	private static float gameSpeed;
-	private static float soundVolume = 0.8f;
-	public static float fxVolume = 1.0f;
+	private string currentLevel = "";
+	private Transform thisTransform;
+	private bool b_isPauseOn;
+	private float gameSpeed;
+	private float soundVolume = 0.8f;
+	public float fxVolume = 1.0f;
 
-	private static string[] m_mapsNames;
-	private static string[] m_rocketsNames;
-	private static string[] m_enginesNames;
-	private static string[] m_audioNames;
+	private string[] m_mapsNames;
+	private string[] m_rocketsNames;
+	private string[] m_enginesNames;
+	private string[] m_audioNames;
 
-	private static GameObject m_mapPrefab;
-	private static GameObject m_map;
-	private static MapInfo m_mapInfo;
-	private static GameObject m_rocket;
-	private static GameObject m_player;
-	private static RocketControl m_rocketControl;
-	private static GameObject m_enginePrefab;
-	private static GameObject m_camera;
-	private static GameObject m_guiText;
-	private static GameObject m_ScoreGUIText;
-
+	private GameObject m_mapPrefab;
+	private GameObject m_map;
+	private MapInfo m_mapInfo;
+	private GameObject m_rocket;
+	private GameObject m_player;
+	private RocketControl m_rocketControl;
+	private GameObject m_camera;
+	private GameObject m_guiText;
+	private GameObject m_ScoreGUIText;
+	private static WorldControl m_instance;
 
 	// Use this for initialization
 	void Start () 
@@ -203,11 +206,17 @@ public class WorldControl : MonoBehaviour {
 		setAllLists ();
 		GameProgress.Load ();
 		thisTransform = transform;
-		m_mainMenu = gameObject.GetComponent<Menu> ();
-		init ();
+		init();
+		m_instance = this;
+		m_mainMenu = gameObject.GetComponent<Menu>();
 	}
 
-	public static void init()
+	public static WorldControl GetInstance()
+	{
+		return m_instance;
+	}
+
+	public void init()
 	{
 		Localization.selectLanguage ("RU");
 		gameSpeed = 1.0f;
@@ -236,7 +245,7 @@ public class WorldControl : MonoBehaviour {
 		pause();
 	}
 
-	private static void instantiateRocket(GameObject rocket)
+	private void instantiateRocket(GameObject rocket)
 	{
 		GameObject temp_rocket = GameObject.Instantiate (rocket) as GameObject;
 		if (m_rocket) GameObject.Destroy(m_rocket);
@@ -250,29 +259,29 @@ public class WorldControl : MonoBehaviour {
 		LoadRocketParameners ();
 	}
 
-	public static void chooseRocket(string rocketName)
+	public void chooseRocket(string rocketName)
 	{	
 		GameObject rocket = Resources.Load(RocketList.getRocketPath(rocketName)) as GameObject;
 		instantiateRocket (rocket);
 		m_rocketControl.rocketName = rocketName;
 	}
-	public static void chooseRocket(GameObject rocket)
+	public void chooseRocket(GameObject rocket)
 	{
 		instantiateRocket (rocket);
 	}
 
-	public static void chooseEngine(string engineName)
+	public void chooseEngine(string engineName)
 	{	
 		m_rocketControl.setEngine(Resources.Load(RocketList.getEnginePath(engineName)) as GameObject);
 		m_rocketControl.getEngineControl ().engineName = engineName;
 	}
 	
-	public static void chooseEngine(GameObject engine)
+	public void chooseEngine(GameObject engine)
 	{
 		m_rocketControl.setEngine(engine);
 	}
 
-	public static void LoadRocketParameners()
+	public void LoadRocketParameners()
 	{
 		if (GameProgress.buyedRockets.ContainsKey(m_rocketControl.rocketName))
 		{
@@ -281,7 +290,7 @@ public class WorldControl : MonoBehaviour {
 		getRocket().GetComponent<Rigidbody2D>().mass = m_rocketControl.m_info.mass;
 	}
 
-	public static void setMapPhysicParametres()
+	public void setMapPhysicParametres()
 	{
 		if (m_mapInfo)
 		{
@@ -303,7 +312,7 @@ public class WorldControl : MonoBehaviour {
 	}
 
 //========================== Level loaders ===============================================
-	public static void loadCustomLevel(GameObject map)
+	public void loadCustomLevel(GameObject map)
 	{
 		m_mapPrefab = map;
 		currentLevel = "CutomLevel";
@@ -311,20 +320,20 @@ public class WorldControl : MonoBehaviour {
 		loadSelectedLevel ();
 	}
 
-	private static void loadSelectedLevel()
+	private void loadSelectedLevel()
 	{
 		m_map = GameObject.Instantiate (m_mapPrefab) as GameObject; //Загрузим карту
 		m_mapInfo = m_map.GetComponent<MapInfo> ();
 		m_map.transform.parent = thisTransform; //Удочерим ее
 		setMapPhysicParametres ();
-		getRocket ().transform.position = m_map.transform.Find (START_LOCATION_NAME).position; // Поставим ракету на начельную позицию на карте
+		getRocket ().transform.position = GameObject.Find(START_LOCATION_NAME).transform.position; // Поставим ракету на начельную позицию на карте
 		getRocket ().GetComponent<SpriteRenderer>().enabled = true;
 		m_rocket.GetComponent<Rigidbody2D>().isKinematic = false;
 		m_rocketControl.Reset();
 		unPause();
 	}
 
-	public static void endLevel()
+	public void endLevel()
 	{//Уровень закончен - уничтожим карту и ракету
 		clearTempScore ();
 		if (m_map) GameObject.Destroy(m_map.gameObject);
@@ -336,7 +345,7 @@ public class WorldControl : MonoBehaviour {
 		m_rocket.GetComponent<SpriteRenderer>().enabled = false;
 	}
 
-	public static void loadLevel(string levelName)
+	public void loadLevel(string levelName)
 	{//Загрузка карты
 		if (MapList.contains(levelName)) 
 		{//Если карта с таким индексом существует
@@ -347,7 +356,7 @@ public class WorldControl : MonoBehaviour {
 		}
 	}
 
-	public static void loadNextLevel()
+	public void loadNextLevel()
 	{
 		endLevel ();
 		bool isNext = false;
@@ -373,14 +382,14 @@ public class WorldControl : MonoBehaviour {
 		m_mainMenu.showMapDiscriptionMenu();
 	}
 
-	public static void restartLevel()
+	public void restartLevel()
 	{
 		endLevel();
 		loadSelectedLevel();
 	}
 
 //=================================================================================== Map loaders
-	public static void showMessage(string text, Color color)
+	public void showMessage(string text, Color color)
 	{//Большие буквы по центру экрана
 		m_guiText.GetComponent<GUIText>().enabled = true;
 		m_guiText.GetComponent<GUIText>().text = text;
@@ -388,61 +397,61 @@ public class WorldControl : MonoBehaviour {
 
 	}
 
-	public static void hideMessage()
+	public void hideMessage()
 	{
 		m_guiText.GetComponent<GUIText>().enabled = false;
 	}
 
-	public static string[] getMapsNames()
+	public string[] getMapsNames()
 	{
 		return m_mapsNames;
 	}
 
-	public static string[] getRocketsNames()
+	public string[] getRocketsNames()
 	{
 		return m_rocketsNames;
 	}
 
-	public static string[] getEnginesNames()
+	public string[] getEnginesNames()
 	{
 		return m_enginesNames;
 	}
 
-	public static string[] getAudioNames()
+	public string[] getAudioNames()
 	{
 		return m_audioNames;
 	}
 
-	public static void pause()
+	public void pause()
 	{
 		b_isPauseOn = true;
 		Time.timeScale = 0.0f;
 	}
 	
-	public static void unPause()
+	public void unPause()
 	{
 		b_isPauseOn = false;
 		Time.timeScale = gameSpeed;
 	}
 
-	public static bool isPaused()
+	public bool isPaused()
 	{
 		return b_isPauseOn;
 	}
 
-	public static void setGameSpeed(float speed)
+	public void setGameSpeed(float speed)
 	{
 		Mathf.Clamp (speed, MIN_GAME_SPEED, MAX_GAME_SPEED);
 		gameSpeed = speed;
 		Time.timeScale = gameSpeed;
 	}
 
-	public static float getGameSpeed()
+	public float getGameSpeed()
 	{
 		return gameSpeed;
 	}
 
-	public static void setSoundVolume(float volume)
+	public void setSoundVolume(float volume)
 	{
 		soundVolume = volume;
 		getCamera().GetComponent<AudioSource>().volume = Mathf.Clamp (soundVolume, MIN_SOUND_VOLUME, MAX_SOUND_VOLUME);
@@ -451,59 +460,59 @@ public class WorldControl : MonoBehaviour {
 		//setFXVolume (volume);
 	}
 
-	public static void setFXVolume(float volume)
+	public void setFXVolume(float volume)
 	{
 		fxVolume = volume;
 		m_player.GetComponent<AudioSource>().volume = Mathf.Clamp (fxVolume*soundVolume, MIN_SOUND_VOLUME, MAX_SOUND_VOLUME);
 		m_guiText.GetComponent<AudioSource>().volume = Mathf.Clamp (fxVolume*soundVolume, MIN_SOUND_VOLUME, MAX_SOUND_VOLUME);
 	}
 
-	public static float getFXVolume()
+	public float getFXVolume()
 	{
 		return fxVolume*soundVolume;
 	}
 
-	public static float getSoundVolume()
+	public float getSoundVolume()
 	{
 		return soundVolume;
 	}
 
-	public static GameObject getRocket()
+	public GameObject getRocket()
 	{
 		return m_rocket;
 	}
 
-	public static RocketControl getRocketControl()
+	public RocketControl getRocketControl()
 	{
 		return m_rocketControl;
 	}
 
-	public static GameObject getMap()
+	public GameObject getMap()
 	{
 		return m_map;
 	}
 
-	public static GameObject getCamera()
+	public GameObject getCamera()
 	{
 		return m_camera;
 	}
 
-	public static string getCurrentLevelNumber()
+	public string getCurrentLevelNumber()
 	{
 		return currentLevel;
 	}
 
-	public static void setCurrentLevelNumber(string levelName)
+	public void setCurrentLevelNumber(string levelName)
 	{
 		currentLevel = levelName;
 	}
 
-	public static MapInfo getMapInfo()
+	public MapInfo getMapInfo()
 	{
 		return m_mapInfo;
 	}
 
-	public static void startTimer(float secons, bool isWinTimer)
+	public void startTimer(float secons, bool isWinTimer)
 	{
 		b_isTimerStarted = true;
 		timer_time = secons;
@@ -511,13 +520,13 @@ public class WorldControl : MonoBehaviour {
 		onStartTimer (b_isWinTimer);
 	}
 
-	public static void stopTimer()
+	public void stopTimer()
 	{
 		b_isTimerStarted = false;
 		hideMessage();
 	}
 
-	private static void onStartTimer (bool isWinTimer)
+	private void onStartTimer (bool isWinTimer)
 	{
 		if (isWinTimer)
 		{
@@ -529,7 +538,7 @@ public class WorldControl : MonoBehaviour {
 		}
 	}
 
-	private static void onTimerTick (bool isWinTimer)
+	private void onTimerTick (bool isWinTimer)
 	{
 		if (isWinTimer)
 		{
@@ -538,7 +547,7 @@ public class WorldControl : MonoBehaviour {
 		}
 	}
 
-	private static void onStopTimer(bool isWinTimer)
+	private void onStopTimer(bool isWinTimer)
 	{
 		if (isWinTimer)
 		{
@@ -553,14 +562,14 @@ public class WorldControl : MonoBehaviour {
 		}
 	}
 
-	public static void playMusic(AudioClip music, float pitch = 1.0f)
+	public void playMusic(AudioClip music, float pitch = 1.0f)
 	{
 		getCamera ().GetComponent<AudioSource>().clip = music;
 		getCamera ().GetComponent<AudioSource>().pitch = pitch;
 		getCamera ().GetComponent<AudioSource>().Play ();
 	}
 
-	public static void playNextMusic(float pitch = 1.0f)
+	public void playNextMusic(float pitch = 1.0f)
 	{
 		bool isNext = false;
 		foreach (string name in m_audioNames)
@@ -575,23 +584,23 @@ public class WorldControl : MonoBehaviour {
 		playMusic (Resources.Load (AudioList.getAudioPath (getAudioNames () [0])) as AudioClip, pitch);
 	}
 
-	public static void playOneShotFX(AudioClip audioFX)
+	public void playOneShotFX(AudioClip audioFX)
 	{
 		m_player.GetComponent<AudioSource>().PlayOneShot(audioFX, getFXVolume());
 	}
 
-	public static void playConstFX(AudioClip audioFX)
+	public void playConstFX(AudioClip audioFX)
 	{
 		m_guiText.GetComponent<AudioSource>().clip = audioFX;
 		m_guiText.GetComponent<AudioSource>().Play();
 	}
 
-	public static void stopConstFX()
+	public void stopConstFX()
 	{
 		m_guiText.GetComponent<AudioSource>().Stop ();
 	}
 
-	public static bool isFXSoundPlaying()
+	public bool isFXSoundPlaying()
 	{
 		return m_guiText.GetComponent<AudioSource>().isPlaying || m_player.GetComponent<AudioSource>().isPlaying;
 	}
@@ -610,12 +619,12 @@ public class WorldControl : MonoBehaviour {
 		}
 	}
 
-	public static void hideScore()
+	public void hideScore()
 	{
 		m_ScoreGUIText.GetComponent<GUIText>().enabled = false;
 	}
 	
-	public static void showScore()
+	public void showScore()
 	{
 		string temp = "";
 		if (GameProgress.tempScore > 0) temp = "(+" + GameProgress.tempScore  + ")";
@@ -624,13 +633,13 @@ public class WorldControl : MonoBehaviour {
 		m_ScoreGUIText.GetComponent<GUIText>().enabled = true;
 	}
 	
-	public static void addScore(int score)
+	public void addScore(int score)
 	{
 		GameProgress.tempScore += score;
 		showScore ();
 	}
 	
-	public static void saveScore()
+	public void saveScore()
 	{
 		/*if (GameProgress.tempScore < 0)
 		{
@@ -644,7 +653,7 @@ public class WorldControl : MonoBehaviour {
 		//return true;
 	}
 
-	public static void clearTempScore()
+	public void clearTempScore()
 	{
 		GameProgress.tempScore = 0;
 		m_ScoreGUIText.GetComponent<GUIText>().text = GameProgress.score.ToString();
@@ -654,7 +663,7 @@ public class WorldControl : MonoBehaviour {
 	void setAllLists()
 	{
 		//Maps
-		m_mapsNames = new string[6] {"map1","map2", "map3", "So_what","StarStage_1", "Карта имени 8-ого марта"};
+		m_mapsNames = new string[7] {"map1","map2", "map3", "So_what","StarStage_1", "Карта имени 8-ого марта", "map4"};
 		MapList.clearMapList ();
 		MapList.addMap (m_mapsNames[0], "Images/maps/map1_logo", "Prefabs/mapPrefabs/map1");
 		MapList.addMap (m_mapsNames[1], "Images/maps/map2_logo", "Prefabs/mapPrefabs/map2");
@@ -662,6 +671,7 @@ public class WorldControl : MonoBehaviour {
 		MapList.addMap (m_mapsNames[3], "Images/maps/feniks_map1_logo", "Prefabs/mapPrefabs/So_what");
 		MapList.addMap (m_mapsNames[4], "Images/maps/feniks_map2_logo", "Prefabs/mapPrefabs/StarStage_1");
 		MapList.addMap (m_mapsNames[5], "Images/maps/logo_1", "Prefabs/mapPrefabs/8march");
+		MapList.addMap(m_mapsNames[6], "Images/maps/map4_logo", "Prefabs/mapPrefabs/map4");
 		gameObject.GetComponent<MenuChooseMap> ().loadMapIcons (m_mapsNames);
 
 		//Rockets

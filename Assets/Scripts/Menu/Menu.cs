@@ -30,7 +30,11 @@ public class Menu : MonoBehaviour {
 
 	public void playMenuMusic()
 	{
-		WorldControl.playMusic(Resources.Load(AudioList.getAudioPath(WorldControl.getAudioNames()[0])) as AudioClip, 1.5f);
+		WorldControl wc = WorldControl.GetInstance();
+		if (wc != null)
+		{
+			wc.playMusic(Resources.Load(AudioList.getAudioPath(wc.getAudioNames()[0])) as AudioClip, 1.5f);
+		}
 	}
 
 	void OnGUI() {
@@ -102,14 +106,20 @@ public class Menu : MonoBehaviour {
 				GUILayout.FlexibleSpace ();
 				if (GUILayout.Button (Localization.T_RESTART_GAME)) 
 				{
-					WorldControl.restartLevel ();
+					if (WorldControl.GetInstance() != null)
+					{
+						WorldControl.GetInstance().restartLevel();
+					}
 					hideMenu();
 				}
 				GUILayout.FlexibleSpace ();
-				if (GUILayout.Button (Localization.T_END_LEVEL)) 
+				if (GUILayout.Button (Localization.T_END_LEVEL))
 				{
-					WorldControl.endLevel();
-					WorldControl.stopTimer();
+					if (WorldControl.GetInstance() != null)
+					{
+						WorldControl.GetInstance().endLevel();
+						WorldControl.GetInstance().stopTimer();
+					}
 					setMainMenuStatus(true);
 					showMapDiscriptionMenu();
 				}
@@ -123,10 +133,16 @@ public class Menu : MonoBehaviour {
 			}
 			GUILayout.FlexibleSpace ();
 			GUILayout.Label(Localization.T_SOUND_VOLUME);
-			WorldControl.setSoundVolume(GUILayout.HorizontalSlider(WorldControl.getSoundVolume(), WorldControl.MIN_SOUND_VOLUME, WorldControl.MAX_SOUND_VOLUME));
+			if (WorldControl.GetInstance() != null)
+			{
+				WorldControl.GetInstance().setSoundVolume(GUILayout.HorizontalSlider(WorldControl.GetInstance().getSoundVolume(), WorldControl.MIN_SOUND_VOLUME, WorldControl.MAX_SOUND_VOLUME));
+			}
 			GUILayout.Space(10);
 			GUILayout.Label(Localization.T_FX_VOLUME);
-			WorldControl.setFXVolume(GUILayout.HorizontalSlider(WorldControl.fxVolume, WorldControl.MIN_SOUND_VOLUME, WorldControl.MAX_SOUND_VOLUME));
+			if (WorldControl.GetInstance() != null)
+			{
+				WorldControl.GetInstance().setFXVolume(GUILayout.HorizontalSlider(WorldControl.GetInstance().fxVolume, WorldControl.MIN_SOUND_VOLUME, WorldControl.MAX_SOUND_VOLUME));
+			}
 			GUILayout.FlexibleSpace ();
 			if (b_isStartMenuButtons) 
 			{//Если мы в клавном меню, то есть кнопки "Тестовая камера" и "Выход"
@@ -154,7 +170,10 @@ public class Menu : MonoBehaviour {
 			}//Если мы в внутреигровом меню, то вместо них кнопка "Вернуться в меню"
 			else if (GUILayout.Button (Localization.T_BACT_TO_MENU)) 
 			{
-				WorldControl.endLevel();
+				if (WorldControl.GetInstance() != null)
+				{
+					WorldControl.GetInstance().endLevel();
+				}
 				setMainMenuStatus(true);
 				b_isTestChamberMenu = false;
 				showMenu();
@@ -178,9 +197,13 @@ public class Menu : MonoBehaviour {
 		b_isGarageMenu = false;
 		b_isShopMenu = false;
 		b_isIngameButtons = true;
-		WorldControl.getCamera ().GetComponent<Camera>().cullingMask = CAMERA_SHOW_ALL;
-		WorldControl.unPause();
-		WorldControl.showScore ();
+		WorldControl wc = WorldControl.GetInstance();
+		if (wc != null)
+		{
+			wc.getCamera().GetComponent<Camera>().cullingMask = CAMERA_SHOW_ALL;
+			wc.unPause();
+			wc.showScore();
+		}
 	}
 
 	public void showMenu()
@@ -191,7 +214,11 @@ public class Menu : MonoBehaviour {
 		b_isGarageMenu = false;
 		b_isShopMenu = false;
 		b_isIngameButtons = false;
-		WorldControl.hideScore ();
+		WorldControl wc = WorldControl.GetInstance();
+		if (wc != null)
+		{
+			wc.hideScore();
+		}
 	}
 
 	public void showMapChooserMenu()
@@ -202,7 +229,11 @@ public class Menu : MonoBehaviour {
 		b_isGarageMenu = false;
 		b_isShopMenu = false;
 		b_isIngameButtons = false;
-		WorldControl.hideScore ();
+		WorldControl wc = WorldControl.GetInstance();
+		if (wc != null)
+		{
+			wc.hideScore();
+		}
 	}
 
 	public void showMapDiscriptionMenu()
@@ -213,9 +244,13 @@ public class Menu : MonoBehaviour {
 		b_isGarageMenu = false;
 		b_isShopMenu = false;
 		b_isIngameButtons = false;
-		WorldControl.getCamera ().GetComponent<Camera>().cullingMask = CAMERA_SHOW_MENU;
-		WorldControl.showScore ();
-		WorldControl.pause();
+		WorldControl wc = WorldControl.GetInstance();
+		if (wc != null)
+		{
+			wc.getCamera().GetComponent<Camera>().cullingMask = CAMERA_SHOW_MENU;
+			wc.showScore();
+			wc.pause();
+		}
 	}
 
 	public void showGarageMenu()
@@ -258,16 +293,24 @@ public class Menu : MonoBehaviour {
 			if (b_isIngameButtons) 
 			{
 				b_isShowMenu = false;
-				WorldControl.getCamera ().GetComponent<Camera>().cullingMask = CAMERA_SHOW_ALL;
-				WorldControl.unPause();
+				WorldControl wc = WorldControl.GetInstance();
+				if (wc != null)
+				{
+					wc.getCamera().GetComponent<Camera>().cullingMask = CAMERA_SHOW_ALL;
+					wc.unPause();
+				}
 			}
 		}
 		else
 		{
 			b_isShowMenu = true;
-			WorldControl.hideScore ();
-			WorldControl.getCamera ().GetComponent<Camera>().cullingMask = CAMERA_SHOW_MENU;
-			WorldControl.pause();
+			WorldControl wc = WorldControl.GetInstance();
+			if (wc != null)
+			{
+				wc.hideScore();
+				wc.getCamera().GetComponent<Camera>().cullingMask = CAMERA_SHOW_MENU;
+				wc.pause();
+			}
 		}
 	}
 

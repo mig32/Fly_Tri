@@ -43,7 +43,11 @@ public class EngineControl : MonoBehaviour
 		{
 			m_info.current_min_power = min_engine_power;
 		}
-		WorldControl.addScore (-power_upgrade_cost);
+		WorldControl wc = WorldControl.GetInstance();
+		if (wc != null)
+		{
+			wc.addScore(-power_upgrade_cost);
+		}
 	}
 
 	public void setEnginePower(float power)
@@ -78,7 +82,11 @@ public class EngineControl : MonoBehaviour
 		}
 		if (engineStartSound)
 		{
-			WorldControl.playOneShotFX (engineStartSound);
+			WorldControl wc = WorldControl.GetInstance();
+			if (wc != null)
+			{
+				wc.playOneShotFX(engineStartSound);
+			}
 		}
 	}
 
@@ -89,19 +97,24 @@ public class EngineControl : MonoBehaviour
 		{
 			particleSystem.Stop();
 		}
-		WorldControl.stopConstFX();
-		if (engineStopSound)
+		WorldControl wc = WorldControl.GetInstance();
+		if (wc != null)
 		{
-			WorldControl.playOneShotFX (engineStopSound);
+			wc.stopConstFX();
+			if (engineStopSound)
+			{
+				wc.playOneShotFX(engineStopSound);
+			}
 		}
 	}
 
 	public virtual void onEngineWorking()
 	{
 		transform.parent.GetComponent<Rigidbody2D>().AddForce ((Vector2)transform.parent.up * m_info.enginePower * Time.deltaTime);
-		if (engineWorkingSound && !WorldControl.isFXSoundPlaying())
+		WorldControl wc = WorldControl.GetInstance();
+		if (engineWorkingSound && wc != null && !wc.isFXSoundPlaying())
 		{
-			WorldControl.playConstFX(engineWorkingSound);
+			wc.playConstFX(engineWorkingSound);
 		}
 	}
 //=======================================================

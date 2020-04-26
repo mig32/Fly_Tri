@@ -27,9 +27,12 @@ public class MenuChooseMap : MonoBehaviour {
 			scrollPosition=GUILayout.BeginScrollView(scrollPosition);
 			GUILayout.BeginHorizontal();
 			int i = 0;
-			foreach (string map_name in WorldControl.getMapsNames())
+			WorldControl wc = WorldControl.GetInstance();
+			if (wc != null)
 			{
-				GUILayout.BeginVertical();
+				foreach (string map_name in wc.getMapsNames())
+				{
+					GUILayout.BeginVertical();
 					if (GameProgress.maps.ContainsKey(map_name))
 					{
 						if (GameProgress.maps[map_name])
@@ -55,11 +58,12 @@ public class MenuChooseMap : MonoBehaviour {
 						GUILayout.Label(Localization.T_CLOSED);
 						GUILayout.Label(m_icons[i]);
 					}
-					
+
 					GUI.color = Color.green;
 					GUILayout.Label(map_name);
-				GUILayout.EndVertical();
-				i++;
+					GUILayout.EndVertical();
+					i++;
+				}
 			}
 			GUILayout.EndHorizontal();
 			GUILayout.EndScrollView();

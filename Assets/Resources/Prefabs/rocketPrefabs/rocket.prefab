@@ -127,6 +127,7 @@ MonoBehaviour:
     current_max_mass: 5
     mass: 1
     current_min_mass: 1
+    current_durability: 1.5
   max_agility: 500
   min_agility: 50
   agility_upgrade_step: 50
@@ -141,6 +142,7 @@ MonoBehaviour:
   rocketSprite: {fileID: 21300000, guid: f6b5c7aeac78abe43b9fbaee723fd6d3, type: 3}
   destroyedRocketSprite: {fileID: 21300000, guid: e2bcfa60e3d288a4aaea84ffb9c1f11b,
     type: 3}
+  f_currentHealth: 0
   b_isAlive: 1
 --- !u!50 &5000000
 Rigidbody2D:
@@ -199,10 +201,10 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: -552137475
-  m_SortingLayer: -1
+  m_SortingLayer: 1
   m_SortingOrder: 1
   m_Sprite: {fileID: 21300000, guid: f6b5c7aeac78abe43b9fbaee723fd6d3, type: 3}
-  m_Color: {r: 1, g: 0, b: 0, a: 1}
+  m_Color: {r: 0, g: 0.85911036, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
