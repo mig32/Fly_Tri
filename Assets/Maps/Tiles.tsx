@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<tileset version="1.2" tiledversion="1.3.4" name="Tiles" tilewidth="64" tileheight="64" tilecount="30" columns="5">
+<tileset version="1.2" tiledversion="1.3.4" name="Tiles" tilewidth="64" tileheight="64" tilecount="25" columns="5">
  <image source="Tiles.png" width="320" height="320"/>
  <tile id="0">
   <objectgroup draworder="index" id="2">
@@ -64,7 +64,7 @@
  <tile id="10">
   <objectgroup draworder="index" id="2">
    <object id="1" x="64.3636" y="30">
-    <polygon points="0,0 0,3.81818 -30.1818,34.1818 -64.1818,34.1818 -64.1818,-29.8182 -30.5455,-30"/>
+    <polygon points="0,0 0,3.81818 -30.2755,34.0334 -64.5412,34.0177 -64.5646,-30.0213 -30.5455,-30"/>
    </object>
   </objectgroup>
  </tile>

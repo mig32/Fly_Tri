@@ -3,122 +3,182 @@ using System;
 using System.Collections.Generic;
 using System.Collections;
 
-public static class RocketList 
+[System.Serializable]
+public struct StringPrefabPair
 {
-	private static Dictionary<string, string> rocketList = new Dictionary<string, string>();
-	private static Dictionary<string, string> engineList = new Dictionary<string, string>();
-	
-	public static string getRocketPath(string name)
+	public StringPrefabPair(string name, GameObject prefab)
 	{
-		if (rocketList.ContainsKey(name))
-		{
-			return rocketList[name];
-		}
-		else
-		{
-			Debug.Log ("Rocket with name:" + name + " doesnt exist");
-			return null;
-		}
+		_name = name;
+		_prefab = prefab;
 	}
 
-	public static string getEnginePath(string name)
+	public string _name;
+	public GameObject _prefab;
+};
+
+[System.Serializable]
+public struct StringPrefabPairsArray
+{
+	public List<StringPrefabPair> m_array;
+
+	public GameObject GetGrefabByName(string name)
 	{
-		if (engineList.ContainsKey(name))
+		foreach (StringPrefabPair pair in m_array)
 		{
-			return engineList[name];
+			if (pair._name == name)
+			{
+				return pair._prefab;
+			}
 		}
-		else
-		{
-			Debug.Log ("Engine with name:" + name + " doesnt exist");
-			return null;
-		}
-	}
-	
-	public static int getRocketsCount()
-	{
-		return rocketList.Count;
+		return null;
 	}
 
-	public static int getEnginesCount()
+	public bool HasName(string name)
 	{
-		return engineList.Count;
-	}
-	
-	public static bool addRocket(string name, string rocketPath)
-	{
-		if (rocketList.ContainsKey(name))
+		foreach (StringPrefabPair pair in m_array)
 		{
-			Debug.Log ("Rocket with name:" + name + " allready exist");
+			if (pair._name == name)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public bool Add(string name, GameObject prefab)
+	{
+		if (HasName(name))
+		{
 			return false;
 		}
-		else
+
+		m_array.Add(new StringPrefabPair(name, prefab));
+		return true;
+	}
+
+	public int Count()
+	{
+		return m_array.Count;
+	}
+
+	public void Remove(string name)
+	{
+		for (int i = 0; i < m_array.Count; ++i)
 		{
-			rocketList.Add(name, rocketPath);
-			return true;
+			if (m_array[i]._name == name)
+			{
+				m_array.RemoveAt(i);
+				return;
+			}
 		}
 	}
 
-	public static bool addEngine(string name, string enginePath)
+	public void Clear()
 	{
-		if (engineList.ContainsKey(name))
+		m_array.Clear();
+	}
+
+	public string[] GetNames()
+	{
+		string[] names = new string[m_array.Count];
+		for (int i = 0; i < m_array.Count; ++i)
 		{
-			Debug.Log ("Engine with name:" + name + " allready exist");
-			return false;
+			names[i] = m_array[i]._name;
 		}
-		else
+		return names;
+	}
+};
+
+public class RocketList : MonoBehaviour
+{
+	private static RocketList m_instance;
+
+	public StringPrefabPairsArray m_rockets;
+	public StringPrefabPairsArray m_engines;
+
+	public static RocketList GetInstance()
+	{
+		return m_instance;
+	}
+
+	private void Awake()
+	{
+		m_instance = this;
+
+		foreach (StringPrefabPair pair in m_rockets.m_array)
 		{
-			engineList.Add(name, enginePath);
-			return true;
+			pair._prefab.GetComponent<RocketControl>().rocketName = pair._name;
+		}
+
+		foreach (StringPrefabPair pair in m_engines.m_array)
+		{
+			pair._prefab.GetComponent<EngineControl>().engineName = pair._name;
 		}
 	}
 
-	public static void removeRocket(string name)
+	public GameObject GetRocketPrefab(string name)
 	{
-		rocketList.Remove (name);
+		return m_rockets.GetGrefabByName(name);
 	}
 
-	public static void removeEngine(string name)
+	public GameObject GetEnginePrefab(string name)
 	{
-		engineList.Remove (name);
+		return m_engines.GetGrefabByName(name);
 	}
 	
-	public static void clearRocketList()
+	public int GetRocketsCount()
 	{
-		rocketList.Clear ();
-		engineList.Clear ();
-	}
-	
-	public static bool containsRocket(string name)
-	{
-		return rocketList.ContainsKey(name);
+		return m_rockets.Count();
 	}
 
-	public static bool containsEngine(string name)
+	public int GetEnginesCount()
 	{
-		return engineList.ContainsKey(name);
+		return m_engines.Count();
 	}
 	
-	public static string[] getRocketNamesList()
+	public bool AddRocket(string name, GameObject rocketPrefab)
 	{
-		string[] result = new string[rocketList.Count];
-		int i = 0;
-		foreach (string key in rocketList.Keys)
-		{
-			result[i] = key;
-			i++;
-		}
-		return result;
+		return m_rockets.Add(name, rocketPrefab);
 	}
 
-	public static string[] getEngineNamesList()
+	public bool AddEngine(string name, GameObject enginePrefab)
 	{
-		string[] result = new string[engineList.Count];
-		int i = 0;
-		foreach (string key in engineList.Keys)
-		{
-			result[i] = key;
-			i++;
-		}
-		return result;
+		return m_engines.Add(name, enginePrefab);
+	}
+
+	public void RemoveRocket(string name)
+	{
+		m_rockets.Remove(name);
+	}
+
+	public void RemoveEngine(string name)
+	{
+		m_engines.Remove(name);
+	}
+	
+	public void ClearRocketList()
+	{
+		m_rockets.Clear();
+		m_engines.Clear();
+	}
+	
+	public bool ContainsRocket(string name)
+	{
+		return m_rockets.HasName(name);
+	}
+
+	public bool ContainsEngine(string name)
+	{
+		return m_engines.HasName(name);
+	}
+	
+	public string[] GetRocketNamesList()
+	{
+		return m_rockets.GetNames();
+	}
+
+	public string[] GetEngineNamesList()
+	{
+		return m_engines.GetNames();
 	}
 }

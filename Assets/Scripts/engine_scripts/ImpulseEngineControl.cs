@@ -16,7 +16,7 @@ public class ImpulseEngineControl : EngineControl {
 			WorldControl wc = WorldControl.GetInstance();
 			if (wc != null)
 			{
-				wc.playOneShotFX(engineStartSound);
+				wc.PlayOneShotFX(engineStartSound);
 			}
 		}
 	}

@@ -152,10 +152,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 4403302401248438332}
     m_Modifications:
-    - target: {fileID: 7777743851092052463, guid: 308226473cfc90c46ae7f0bd72318a7b,
+    - target: {fileID: -7064666539249101154, guid: 308226473cfc90c46ae7f0bd72318a7b,
         type: 3}
-      propertyPath: m_Name
-      value: TiledMap1
+      propertyPath: m_RootOrder
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -7064666539249101154, guid: 308226473cfc90c46ae7f0bd72318a7b,
         type: 3}
@@ -174,6 +174,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -7064666539249101154, guid: 308226473cfc90c46ae7f0bd72318a7b,
         type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -7064666539249101154, guid: 308226473cfc90c46ae7f0bd72318a7b,
+        type: 3}
       propertyPath: m_LocalRotation.x
       value: -0
       objectReference: {fileID: 0}
@@ -186,16 +191,6 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalRotation.z
       value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: -7064666539249101154, guid: 308226473cfc90c46ae7f0bd72318a7b,
-        type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: -7064666539249101154, guid: 308226473cfc90c46ae7f0bd72318a7b,
-        type: 3}
-      propertyPath: m_RootOrder
-      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -7064666539249101154, guid: 308226473cfc90c46ae7f0bd72318a7b,
         type: 3}
@@ -224,18 +219,23 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6726614996765083281, guid: 308226473cfc90c46ae7f0bd72318a7b,
         type: 3}
-      propertyPath: m_SortingLayerID
-      value: 1040289429
+      propertyPath: m_SortingLayer
+      value: -1
       objectReference: {fileID: 0}
     - target: {fileID: 6726614996765083281, guid: 308226473cfc90c46ae7f0bd72318a7b,
         type: 3}
-      propertyPath: m_SortingLayer
-      value: -1
+      propertyPath: m_SortingLayerID
+      value: 1040289429
       objectReference: {fileID: 0}
     - target: {fileID: 7398864588779653166, guid: 308226473cfc90c46ae7f0bd72318a7b,
         type: 3}
       propertyPath: m_Enabled
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7777743851092052463, guid: 308226473cfc90c46ae7f0bd72318a7b,
+        type: 3}
+      propertyPath: m_Name
+      value: TiledMap1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: -2695619058785784247, guid: 308226473cfc90c46ae7f0bd72318a7b,

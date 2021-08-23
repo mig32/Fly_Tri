@@ -54,7 +54,7 @@ public class TestChamberControl : MonoBehaviour {
 		WorldControl wc = WorldControl.GetInstance();
 		if (wc != null)
 		{
-			wc.loadCustomLevel(Resources.Load("Prefabs/TestChamber") as GameObject);
+			wc.LoadCustomLevel(Resources.Load("Prefabs/TestChamber") as GameObject);
 		}
 		mainMenu = menu;
 		initObjects ();
@@ -66,7 +66,7 @@ public class TestChamberControl : MonoBehaviour {
 		if (wc != null)
 		{
 			m_map = wc.getMap();
-			m_rocket = wc.getRocket();
+			m_rocket = wc.GetRocket();
 		}
 		m_rocket_script = m_rocket.GetComponent<RocketControl> ();
 		if (m_currentMapName != m_map.name)
@@ -80,10 +80,10 @@ public class TestChamberControl : MonoBehaviour {
 	{
 		MapInfo map_info = m_map.GetComponent<MapInfo> ();
 		mainMenu.menuMapDiscription.initMenu(mainMenu, map_info);
-		mapFriction = map_info.mapFriction;
-		mapBounciness = map_info.mapBounciness;
-		mapGravity = map_info.mapGravity;
-		mapDrag = map_info.mapDrag;
+		mapFriction = map_info.m_mapFriction;
+		mapBounciness = map_info.m_mapBounciness;
+		mapGravity = map_info.m_mapGravity;
+		mapDrag = map_info.m_mapDrag;
 		rMass = m_rocket.GetComponent<Rigidbody2D>().mass;
 		rEnginePower = m_rocket_script.getEngine().GetComponent<EngineControl>().getEnginePower();
 		rAgility = m_rocket_script.m_info.agility;

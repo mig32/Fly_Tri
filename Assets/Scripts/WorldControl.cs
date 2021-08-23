@@ -1,164 +1,16 @@
 ﻿using UnityEngine;
 using System;
-using System.Collections.Generic;
-using System.Collections;
+using UnityEngine.UI;
 
-public static class GameProgress
+public class WorldControl : MonoBehaviour
 {
-	public static int score = 5000;
-	public static int tempScore = 0;
-	public static Dictionary<string, bool> maps = new Dictionary<string, bool>();
-	public static Dictionary<string, RocketInfo> buyedRockets = new Dictionary<string, RocketInfo>();
-	public static Dictionary<string, EngineInfo>  buyedEngines = new Dictionary<string, EngineInfo>();
+	[SerializeField] private GameObject m_mainGUI;
+	public event Action OnScoreUpdated;
 
-	public static void Save()
-	{
-		PlayerPrefs.SetInt ("score", score);
-		PlayerPrefs.SetInt ("tempScore", tempScore);
-
-		string temp = "";
-		foreach (string map in maps.Keys)
-		{
-			temp += map + "\n" + (maps[map] ? "1" : "0") + "\n";
-		}
-		PlayerPrefs.SetString ("maps", temp);
-
-		temp = "";
-		RocketInfo rInfo;
-		foreach (string rocket in buyedRockets.Keys)
-		{
-			rInfo = buyedRockets[rocket];
-			temp += rocket + "\n" +  rInfo.current_max_agility + "\n" +  rInfo.agility + "\n" +  rInfo.current_min_agility + "\n";
-			temp += rInfo.current_max_mass + "\n" +  rInfo.mass + "\n" +  rInfo.current_min_mass + "\n";
-		}
-		PlayerPrefs.SetString ("buyedRockets", temp);
-
-		temp = "";
-		EngineInfo eInfo;
-		foreach (string engine in buyedEngines.Keys)
-		{
-			eInfo = buyedEngines[engine];
-			temp += engine + "\n" +  eInfo.current_max_power + "\n" +  eInfo.enginePower + "\n" +  eInfo.current_min_power + "\n";
-		}
-		PlayerPrefs.SetString ("buyedEngines", temp);
-
-		PlayerPrefs.Save ();
-	}
-
-	public static void Load()
-	{
-		init ();
-		if (PlayerPrefs.HasKey("score"))
-		{
-			score = PlayerPrefs.GetInt ("score");
-		}
-		if (PlayerPrefs.HasKey("tempScore"))
-		{
-			tempScore = PlayerPrefs.GetInt ("tempScore");
-		}
-		if (PlayerPrefs.HasKey("maps"))
-		{
-			string[] temp = PlayerPrefs.GetString("maps").Split('\n');
-			for (int i = 0; i < temp.Length-1; i += 2)
-			{
-				//Debug.Log(temp[i] + temp[i+1]);
-				maps.Add(temp[i], (temp[i+1] == "1"));
-			}
-		}
-
-		if (PlayerPrefs.HasKey("buyedRockets"))
-		{
-			string[] temp = PlayerPrefs.GetString("buyedRockets").Split('\n');
-			for (int i = 0; i < temp.Length-1; i += 7)
-			{
-				RocketInfo rInfo = new RocketInfo();
-				rInfo.current_max_agility = float.Parse(temp[i+1]);
-				rInfo.agility = float.Parse(temp[i+2]);
-				rInfo.current_min_agility = float.Parse(temp[i+3]);
-				rInfo.current_max_mass = float.Parse(temp[i+4]);
-				rInfo.mass = float.Parse(temp[i+5]);
-				rInfo.current_min_mass = float.Parse(temp[i+6]);
-				buyedRockets.Add(temp[i], rInfo);
-			}
-		}
-
-		if (PlayerPrefs.HasKey("buyedEngines"))
-		{
-			string[] temp = PlayerPrefs.GetString("buyedEngines").Split('\n');
-			for (int i = 0; i < temp.Length-1; i += 4)
-			{
-				EngineInfo eInfo = new EngineInfo();
-				eInfo.current_max_power = float.Parse(temp[i+1]);
-				eInfo.enginePower = float.Parse(temp[i+2]);
-				eInfo.current_min_power = float.Parse(temp[i+3]);
-				buyedEngines.Add(temp[i], eInfo);
-			}
-		}
-	}
-
-	public static void Clear()
-	{
-		PlayerPrefs.DeleteAll();
-		init ();
-		WorldControl wc = WorldControl.GetInstance();
-		if (wc != null)
-		{
-			wc.init();
-		}
-	}
-
-	private static void init()
-	{
-		score = 5000;
-		tempScore = 0;
-		maps.Clear ();
-		buyedRockets.Clear ();
-		buyedEngines.Clear ();
-	}
-
-	public static void setBuyedRocket(string rocketName, RocketInfo rocketInfo)
-	{
-		if (buyedRockets.ContainsKey(rocketName))
-		{
-			buyedRockets[rocketName] = rocketInfo;
-		}
-		else
-		{
-			buyedRockets.Add(rocketName, rocketInfo);
-		}
-	}
-
-	public static void setBuyedEngine(string engineName, EngineInfo engineInfo)
-	{
-		if (buyedEngines.ContainsKey(engineName))
-		{
-			buyedEngines[engineName] = engineInfo;
-		}
-		else
-		{
-			buyedEngines.Add(engineName, engineInfo);
-		}
-	}
-
-	public static void setMap(string mapName, bool isCompleted)
-	{
-		if (maps.ContainsKey(mapName))
-		{
-			if (!maps[mapName])
-				maps[mapName] = isCompleted;
-		}
-		else
-		{
-			maps.Add(mapName, isCompleted);
-		}
-	}
-}
-
-public class WorldControl : MonoBehaviour {
 	public const float WIN_TIMER = 2.0f;
 	private float timer_time;
-	private bool b_isTimerStarted = false;
-	private bool b_isWinTimer;
+	private bool m_isTimerStarted = false;
+	private bool m_isWinTimer;
 
 	public const string ROCKET_CAMERA_NAME = "rocket_camera";
 	public const string PLAYER_OBJECT_NAME = "player";
@@ -177,14 +29,13 @@ public class WorldControl : MonoBehaviour {
 
 	public Menu m_mainMenu;
 
-	private string currentLevel = "";
+	private int m_currentMapIdx = 0;
 	private Transform thisTransform;
 	private bool b_isPauseOn;
 	private float gameSpeed;
-	private float soundVolume = 0.8f;
-	public float fxVolume = 1.0f;
+	private float m_musicVolume = 0.8f;
+	public float m_fxVolume = 1.0f;
 
-	private string[] m_mapsNames;
 	private string[] m_rocketsNames;
 	private string[] m_enginesNames;
 	private string[] m_audioNames;
@@ -197,17 +48,40 @@ public class WorldControl : MonoBehaviour {
 	private RocketControl m_rocketControl;
 	private GameObject m_camera;
 	private GameObject m_guiText;
-	private GameObject m_ScoreGUIText;
+	public MapList MapList { get; private set; }
+	public SoundController SoundController { get; private set; }
 	private static WorldControl m_instance;
 
-	// Use this for initialization
-	void Start () 
+	private void Awake()
 	{
-		setAllLists ();
-		GameProgress.Load ();
+		if (m_instance != null)
+		{
+			Debug.Assert(m_instance == this, "Second DialogsController insance");
+			return;
+		}
+
+		m_instance = this;
+		MapList = GetComponent<MapList>();
+		SoundController = GetComponent<SoundController>();
+		m_player = GameObject.Find(PLAYER_OBJECT_NAME).gameObject;
+		m_camera = GameObject.Find(ROCKET_CAMERA_NAME).gameObject; //Камера, которая будет следить за ракетой
+		m_guiText = GameObject.Find(MESSAGE_OBJECT_NAME).gameObject; //guiText для отображения сообщений
+	}
+
+	private void OnDestroy()
+	{
+		if (m_instance == this)
+		{
+			m_instance = null;
+		}
+	}
+
+	private void Start () 
+	{
+		SetAllLists();
+		GameProgress.Load();
 		thisTransform = transform;
 		init();
-		m_instance = this;
 		m_mainMenu = gameObject.GetComponent<Menu>();
 	}
 
@@ -220,13 +94,9 @@ public class WorldControl : MonoBehaviour {
 	{
 		Localization.selectLanguage ("RU");
 		gameSpeed = 1.0f;
-		m_player = GameObject.Find (PLAYER_OBJECT_NAME).gameObject;
-		m_camera = GameObject.Find (ROCKET_CAMERA_NAME).gameObject; //Камера, которая будет следить за ракетой
-		m_guiText = GameObject.Find (MESSAGE_OBJECT_NAME).gameObject; //guiText для отображения сообщений
-		m_ScoreGUIText = GameObject.Find (SCORE_OBJECT_NAME).gameObject;
 		chooseRocket (m_rocketsNames[0]);
 		chooseEngine (m_enginesNames[0]);
-		playMusic (Resources.Load (AudioList.getAudioPath (getAudioNames () [0])) as AudioClip, 1.5f);
+		PlayMusic (Resources.Load (AudioList.getAudioPath (getAudioNames () [0])) as AudioClip, 1.5f);
 		if (!GameProgress.buyedRockets.ContainsKey(m_rocketControl.rocketName))
 		{
 			GameProgress.setBuyedRocket(m_rocketControl.rocketName, m_rocketControl.m_info);
@@ -235,14 +105,8 @@ public class WorldControl : MonoBehaviour {
 		{
 			GameProgress.setBuyedEngine(m_rocketControl.getEngineControl().engineName, m_rocketControl.getEngineControl().m_info);
 		}
-		foreach (string mapName in m_mapsNames)
-		{
-			if (!GameProgress.maps.ContainsKey(mapName))
-			{
-				GameProgress.setMap(mapName, false);
-			}
-		}
-		pause();
+
+		Pause();
 	}
 
 	private void instantiateRocket(GameObject rocket)
@@ -261,7 +125,7 @@ public class WorldControl : MonoBehaviour {
 
 	public void chooseRocket(string rocketName)
 	{	
-		GameObject rocket = Resources.Load(RocketList.getRocketPath(rocketName)) as GameObject;
+		GameObject rocket = RocketList.GetInstance().GetRocketPrefab(rocketName);
 		instantiateRocket (rocket);
 		m_rocketControl.rocketName = rocketName;
 	}
@@ -272,7 +136,7 @@ public class WorldControl : MonoBehaviour {
 
 	public void chooseEngine(string engineName)
 	{	
-		m_rocketControl.setEngine(Resources.Load(RocketList.getEnginePath(engineName)) as GameObject);
+		m_rocketControl.setEngine(RocketList.GetInstance().GetEnginePrefab(engineName));
 		m_rocketControl.getEngineControl ().engineName = engineName;
 	}
 	
@@ -287,124 +151,122 @@ public class WorldControl : MonoBehaviour {
 		{
 			m_rocketControl.m_info = GameProgress.buyedRockets[m_rocketControl.rocketName];
 		}
-		getRocket().GetComponent<Rigidbody2D>().mass = m_rocketControl.m_info.mass;
+		GetRocket().GetComponent<Rigidbody2D>().mass = m_rocketControl.m_info.mass;
 	}
 
-	public void setMapPhysicParametres()
+	public void SetMapPhysicParametres()
 	{
 		if (m_mapInfo)
 		{
-			getRocket().GetComponent<Rigidbody2D>().angularDrag = getRocket().GetComponent<Rigidbody2D>().drag = m_mapInfo.mapDrag;
-			getRocket().GetComponent<Rigidbody2D>().gravityScale = m_mapInfo.mapGravity;
-			PhysicsMaterial2D mapMaterial = new PhysicsMaterial2D();
-			mapMaterial.bounciness = m_mapInfo.mapBounciness;
-			mapMaterial.friction = m_mapInfo.mapFriction;
-			GameObject tempLanding = GameObject.Instantiate (GameObject.FindWithTag(ROCKET_LANDING_TAG)) as GameObject;
-			tempLanding.GetComponent<Collider2D>().sharedMaterial = mapMaterial;
-
-			GameObject.Destroy (GameObject.FindWithTag(WorldControl.ROCKET_LANDING_TAG));
-			
-			tempLanding.transform.parent = m_rocket.transform;
-			tempLanding.transform.localPosition = new Vector3(0,0,0);
-			tempLanding.transform.localRotation = Quaternion.identity;
-
+			GetRocket().GetComponent<Rigidbody2D>().angularDrag = GetRocket().GetComponent<Rigidbody2D>().drag = m_mapInfo.m_mapDrag;
+			GetRocket().GetComponent<Rigidbody2D>().gravityScale = m_mapInfo.m_mapGravity;
+			Collider2D rocketLanding = GetRocket().GetComponent<RocketControl>().rocketLanding;
+			if (!rocketLanding.sharedMaterial)
+			{
+				rocketLanding.sharedMaterial = new PhysicsMaterial2D();
+			}
+			rocketLanding.sharedMaterial.bounciness = m_mapInfo.m_mapBounciness;
+			rocketLanding.sharedMaterial.friction = m_mapInfo.m_mapFriction;
 		}
 	}
 
 //========================== Level loaders ===============================================
-	public void loadCustomLevel(GameObject map)
+	public void LoadCustomLevel(GameObject map)
 	{
+		if (m_map != null)
+		{
+			EndLevel();
+		}
+
 		m_mapPrefab = map;
-		currentLevel = "CutomLevel";
-		if (m_map) endLevel ();
-		loadSelectedLevel ();
+		m_currentMapIdx = -1;
+		LoadSelectedLevel();
 	}
 
-	private void loadSelectedLevel()
+	private void LoadSelectedLevel()
 	{
 		m_map = GameObject.Instantiate (m_mapPrefab) as GameObject; //Загрузим карту
 		m_mapInfo = m_map.GetComponent<MapInfo> ();
 		m_map.transform.parent = thisTransform; //Удочерим ее
-		setMapPhysicParametres ();
-		getRocket ().transform.position = GameObject.Find(START_LOCATION_NAME).transform.position; // Поставим ракету на начельную позицию на карте
-		getRocket ().GetComponent<SpriteRenderer>().enabled = true;
+		SetMapPhysicParametres ();
+		GetRocket().transform.position = GameObject.Find(START_LOCATION_NAME).transform.position; // Поставим ракету на начельную позицию на карте
+		GetRocket().SetActive(true);// .GetComponent<SpriteRenderer>().enabled = true;
 		m_rocket.GetComponent<Rigidbody2D>().isKinematic = false;
 		m_rocketControl.Reset();
-		unPause();
+		UnPause();
 	}
 
-	public void endLevel()
+	public void EndLevel()
 	{//Уровень закончен - уничтожим карту и ракету
-		clearTempScore ();
+		ClearTempScore();
 		if (m_map) GameObject.Destroy(m_map.gameObject);
 		m_rocket.transform.localRotation = Quaternion.identity;
 		m_rocket.transform.localPosition = new Vector3(0,0,0);
-		m_rocket.GetComponent<SpriteRenderer> ().sprite = m_rocketControl.rocketSprite;
 		m_rocketControl.b_isAlive = false;
 		m_rocket.GetComponent<Rigidbody2D>().isKinematic = true;
-		m_rocket.GetComponent<SpriteRenderer>().enabled = false;
+		m_rocket.SetActive(false);// .GetComponent<SpriteRenderer>().enabled = false;
 	}
 
-	public void loadLevel(string levelName)
-	{//Загрузка карты
-		if (MapList.contains(levelName)) 
-		{//Если карта с таким индексом существует
-			currentLevel = levelName;
-			m_mapPrefab = Resources.Load(MapList.getMapPath(levelName)) as GameObject;
-			if (m_map) endLevel ();
-			loadSelectedLevel();
-		}
-	}
-
-	public void loadNextLevel()
+	public void LoadLevel(int levelIdx)
 	{
-		endLevel ();
-		bool isNext = false;
-		foreach (string name in m_mapsNames)
+		var mapPaths = MapList.GetMapPaths(levelIdx);
+		if (mapPaths == null)
 		{
-			if (isNext) 
-			{
-				currentLevel = name;
-				break;
-			}
-			if (name == currentLevel) 
-			{
-				isNext = true;
-				currentLevel = m_mapsNames[0];
-			}
+			return;
 		}
-		
-		MapInfo map_info = (Resources.Load(MapList.getMapPath(currentLevel)) as GameObject).GetComponent<MapInfo>();
-		map_info.mapName = currentLevel;
-		map_info.mapLogo = Resources.Load(MapList.getMapLogoPath(currentLevel)) as Texture2D;
-		GameProgress.setMap (currentLevel, false);
+
+		if (m_map != null)
+		{
+			EndLevel();
+		}
+
+		m_currentMapIdx = levelIdx;
+		m_mapPrefab = mapPaths.GetMapPrefab();
+		LoadSelectedLevel();
+	}
+
+	public void LoadNextLevel()
+	{
+		EndLevel();
+
+		bool isNext = m_currentMapIdx < MapList.Count;
+		if (isNext)
+		{
+			++m_currentMapIdx;
+		}
+
+		var mapPahs = MapList.GetMapPaths(m_currentMapIdx);
+		if (mapPahs == null)
+		{
+			return;
+		}
+
+		MapInfo map_info = (mapPahs.GetMapPrefab()).GetComponent<MapInfo>();
+		map_info.m_mapName = mapPahs.Name;
+		map_info.m_mapIcon = mapPahs.GetMapIcon();
+		GameProgress.SetMap(m_currentMapIdx, false);
 		m_mainMenu.menuMapDiscription.initMenu(m_mainMenu, map_info);
 		m_mainMenu.showMapDiscriptionMenu();
 	}
 
-	public void restartLevel()
+	public void RestartLevel()
 	{
-		endLevel();
-		loadSelectedLevel();
+		EndLevel();
+		LoadSelectedLevel();
 	}
 
 //=================================================================================== Map loaders
-	public void showMessage(string text, Color color)
+	public void ShowMessage(string text, Color color)
 	{//Большие буквы по центру экрана
-		m_guiText.GetComponent<GUIText>().enabled = true;
-		m_guiText.GetComponent<GUIText>().text = text;
-		m_guiText.GetComponent<GUIText>().color = color;
+		m_guiText.GetComponent<Text>().enabled = true;
+		m_guiText.GetComponent<Text>().text = text;
+		m_guiText.GetComponent<Text>().color = color;
 
 	}
 
-	public void hideMessage()
+	public void HideMessage()
 	{
-		m_guiText.GetComponent<GUIText>().enabled = false;
-	}
-
-	public string[] getMapsNames()
-	{
-		return m_mapsNames;
+		m_guiText.GetComponent<Text>().enabled = false;
 	}
 
 	public string[] getRocketsNames()
@@ -422,13 +284,13 @@ public class WorldControl : MonoBehaviour {
 		return m_audioNames;
 	}
 
-	public void pause()
+	public void Pause()
 	{
 		b_isPauseOn = true;
 		Time.timeScale = 0.0f;
 	}
 	
-	public void unPause()
+	public void UnPause()
 	{
 		b_isPauseOn = false;
 		Time.timeScale = gameSpeed;
@@ -451,33 +313,60 @@ public class WorldControl : MonoBehaviour {
 		return gameSpeed;
 	}
 
-	public void setSoundVolume(float volume)
+	public void SetMusicVolume(float volume)
 	{
-		soundVolume = volume;
-		getCamera().GetComponent<AudioSource>().volume = Mathf.Clamp (soundVolume, MIN_SOUND_VOLUME, MAX_SOUND_VOLUME);
-		m_player.GetComponent<AudioSource>().volume = Mathf.Clamp (fxVolume*soundVolume, MIN_SOUND_VOLUME, MAX_SOUND_VOLUME);
-		m_guiText.GetComponent<AudioSource>().volume = Mathf.Clamp (fxVolume*soundVolume, MIN_SOUND_VOLUME, MAX_SOUND_VOLUME);
-		//setFXVolume (volume);
+		SoundController.MusicVolume = volume;
+		var audioSource = m_camera.GetComponent<AudioSource>();
+		m_musicVolume = Mathf.Clamp(volume, MIN_SOUND_VOLUME, MAX_SOUND_VOLUME);
+		if (m_musicVolume < 0.05f)
+		{
+			audioSource.enabled = false;
+		}
+		else
+		{
+			audioSource.volume = m_musicVolume;
+			if (!audioSource.enabled)
+			{
+				audioSource.enabled = true;
+				if (audioSource.clip != null)
+				{
+					audioSource.Play();
+				}
+			}
+		}
 	}
 
-	public void setFXVolume(float volume)
+	public void SetFXVolume(float volume)
 	{
-		fxVolume = volume;
-		m_player.GetComponent<AudioSource>().volume = Mathf.Clamp (fxVolume*soundVolume, MIN_SOUND_VOLUME, MAX_SOUND_VOLUME);
-		m_guiText.GetComponent<AudioSource>().volume = Mathf.Clamp (fxVolume*soundVolume, MIN_SOUND_VOLUME, MAX_SOUND_VOLUME);
+		SoundController.SoundVolume = volume;
+		var audioSourcePlayer = m_player.GetComponent<AudioSource>();
+		var audioSourceMap = m_guiText.GetComponent<AudioSource>();
+		m_fxVolume = Mathf.Clamp(volume, MIN_SOUND_VOLUME, MAX_SOUND_VOLUME);
+		if (m_fxVolume < 0.05f)
+		{
+			audioSourcePlayer.enabled = false;
+			audioSourceMap.enabled = false;
+		}
+		else
+		{
+			audioSourcePlayer.volume = m_fxVolume;
+			audioSourceMap.volume = m_fxVolume;
+			audioSourcePlayer.enabled = true;
+			audioSourceMap.enabled = true;
+		}
 	}
 
-	public float getFXVolume()
+	public float GetFXVolume()
 	{
-		return fxVolume*soundVolume;
+		return SoundController.SoundVolume;
 	}
 
-	public float getSoundVolume()
+	public float GetMusicVolume()
 	{
-		return soundVolume;
+		return SoundController.MusicVolume;
 	}
 
-	public GameObject getRocket()
+	public GameObject GetRocket()
 	{
 		return m_rocket;
 	}
@@ -492,217 +381,175 @@ public class WorldControl : MonoBehaviour {
 		return m_map;
 	}
 
-	public GameObject getCamera()
+	public GameObject GetCamera()
 	{
 		return m_camera;
 	}
 
-	public string getCurrentLevelNumber()
+	public int GetCurrentLevelIdx()
 	{
-		return currentLevel;
+		return m_currentMapIdx;
 	}
 
-	public void setCurrentLevelNumber(string levelName)
+	public void SetCurrentLevelIdx(int mapIdx)
 	{
-		currentLevel = levelName;
+		m_currentMapIdx = mapIdx;
 	}
 
-	public MapInfo getMapInfo()
+	public MapInfo GetMapInfo()
 	{
 		return m_mapInfo;
 	}
 
-	public void startTimer(float secons, bool isWinTimer)
+	public void StartTimer(float secons, bool isWinTimer)
 	{
-		b_isTimerStarted = true;
+		m_isTimerStarted = true;
 		timer_time = secons;
-		b_isWinTimer = isWinTimer;
-		onStartTimer (b_isWinTimer);
+		m_isWinTimer = isWinTimer;
+		OnStartTimer(m_isWinTimer);
 	}
 
-	public void stopTimer()
+	public void StopTimer()
 	{
-		b_isTimerStarted = false;
-		hideMessage();
+		m_isTimerStarted = false;
+		HideMessage();
 	}
 
-	private void onStartTimer (bool isWinTimer)
+	private void OnStartTimer(bool isWinTimer)
 	{
 		if (isWinTimer)
 		{
-			showMessage (Localization.T_WIN_MESSAGE + " (" + string.Format("{0:0.00}", Mathf.Round (timer_time*100.0f)/100.0f) + ")", Color.green);
+			ShowMessage(Localization.T_WIN_MESSAGE + " (" + string.Format("{0:0.00}", Mathf.Round (timer_time*100.0f)/100.0f) + ")", Color.green);
 		}
 		else
 		{
-			showMessage (Localization.T_LOSE_MESSAGE + ((int)((m_rocketControl.cost+m_rocketControl.getEngineControl().cost)/2)).ToString(), Color.red);
+			ShowMessage(Localization.T_LOSE_MESSAGE + ((int)((m_rocketControl.cost+m_rocketControl.getEngineControl().cost)/2)).ToString(), Color.red);
 		}
 	}
 
-	private void onTimerTick (bool isWinTimer)
+	private void OnTimerTick(bool isWinTimer)
 	{
 		if (isWinTimer)
 		{
 			string timeLeft = string.Format("{0:0.00}", Mathf.Round (timer_time*100.0f)/100.0f);
-			m_guiText.GetComponent<GUIText>().text = Localization.T_WIN_MESSAGE + " (" + timeLeft + ")";
+			m_guiText.GetComponent<Text>().text = Localization.T_WIN_MESSAGE + " (" + timeLeft + ")";
 		}
 	}
 
-	private void onStopTimer(bool isWinTimer)
+	private void OnStopTimer(bool isWinTimer)
 	{
 		if (isWinTimer)
 		{
-			saveScore();
+			SaveScore();
 			m_guiText.GetComponent<AudioSource>().Stop();
-			GameProgress.setMap(m_mapInfo.mapName, true);
-			loadNextLevel();
+			GameProgress.SetMap(m_currentMapIdx, true);
+			LoadNextLevel();
 		}
 		else
 		{
-			restartLevel();
+			RestartLevel();
 		}
 	}
 
-	public void playMusic(AudioClip music, float pitch = 1.0f)
+	public void PlayMusic(AudioClip music, float pitch = 1.0f)
 	{
-		getCamera ().GetComponent<AudioSource>().clip = music;
-		getCamera ().GetComponent<AudioSource>().pitch = pitch;
-		getCamera ().GetComponent<AudioSource>().Play ();
+		GetCamera ().GetComponent<AudioSource>().clip = music;
+		GetCamera ().GetComponent<AudioSource>().pitch = pitch;
+		GetCamera ().GetComponent<AudioSource>().Play ();
 	}
 
-	public void playNextMusic(float pitch = 1.0f)
+	public void PlayNextMusic(float pitch = 1.0f)
 	{
 		bool isNext = false;
 		foreach (string name in m_audioNames)
 		{
 			if (isNext) 
 			{
-				playMusic (Resources.Load (AudioList.getAudioPath (name)) as AudioClip, pitch);
+				PlayMusic(Resources.Load (AudioList.getAudioPath (name)) as AudioClip, pitch);
 				return;
 			}
 			if (name == AudioList.currentAudioName) isNext = true;
 		}
-		playMusic (Resources.Load (AudioList.getAudioPath (getAudioNames () [0])) as AudioClip, pitch);
+		PlayMusic(Resources.Load (AudioList.getAudioPath (getAudioNames () [0])) as AudioClip, pitch);
 	}
 
-	public void playOneShotFX(AudioClip audioFX)
+	public void PlayOneShotFX(AudioClip audioFX)
 	{
-		m_player.GetComponent<AudioSource>().PlayOneShot(audioFX, getFXVolume());
+		m_player.GetComponent<AudioSource>().PlayOneShot(audioFX, GetFXVolume());
 	}
 
-	public void playConstFX(AudioClip audioFX)
+	public void PlayConstFX(AudioClip audioFX)
 	{
 		m_guiText.GetComponent<AudioSource>().clip = audioFX;
 		m_guiText.GetComponent<AudioSource>().Play();
 	}
 
-	public void stopConstFX()
+	public void StopConstFX()
 	{
 		m_guiText.GetComponent<AudioSource>().Stop ();
 	}
 
-	public bool isFXSoundPlaying()
+	public bool IsFXSoundPlaying()
 	{
 		return m_guiText.GetComponent<AudioSource>().isPlaying || m_player.GetComponent<AudioSource>().isPlaying;
 	}
 
 	void Update()
 	{
-		if (b_isTimerStarted)
+		if (m_isTimerStarted)
 		{
 			timer_time -= Time.deltaTime;
 			if (timer_time <= 0)
 			{
-				stopTimer();
-				onStopTimer (b_isWinTimer);
+				StopTimer();
+				OnStopTimer (m_isWinTimer);
 			}
-			onTimerTick(b_isWinTimer);
+			OnTimerTick(m_isWinTimer);
 		}
 	}
 
-	public void hideScore()
+	public void HideScore()
 	{
-		m_ScoreGUIText.GetComponent<GUIText>().enabled = false;
+		m_mainGUI.SetActive(false);
 	}
 	
-	public void showScore()
+	public void ShowScore()
 	{
-		string temp = "";
-		if (GameProgress.tempScore > 0) temp = "(+" + GameProgress.tempScore  + ")";
-		else if (GameProgress.tempScore < 0) temp = "(" + GameProgress.tempScore  + ")";
-		m_ScoreGUIText.GetComponent<GUIText>().text = (GameProgress.score + temp);
-		m_ScoreGUIText.GetComponent<GUIText>().enabled = true;
+		m_mainGUI.SetActive(true);
 	}
 	
-	public void addScore(int score)
+	public void AddScore(int score)
 	{
 		GameProgress.tempScore += score;
-		showScore ();
+		OnScoreUpdated?.Invoke();
 	}
 	
-	public void saveScore()
+	public void SaveScore()
 	{
-		/*if (GameProgress.tempScore < 0)
-		{
-			if (GameProgress.score < GameProgress.tempScore)
-			{
-				return false;
-			}
-		}*/
 		GameProgress.score += GameProgress.tempScore;
 		GameProgress.tempScore = 0;
-		//return true;
+		OnScoreUpdated?.Invoke();
 	}
 
-	public void clearTempScore()
+	public void ClearTempScore()
 	{
 		GameProgress.tempScore = 0;
-		m_ScoreGUIText.GetComponent<GUIText>().text = GameProgress.score.ToString();
+		OnScoreUpdated?.Invoke();
 	}
 	
 
-	void setAllLists()
+	void SetAllLists()
 	{
-		//Maps
-		m_mapsNames = new string[7] {"map1","map2", "map3", "So_what","StarStage_1", "Карта имени 8-ого марта", "map4"};
-		MapList.clearMapList ();
-		MapList.addMap (m_mapsNames[0], "Images/maps/map1_logo", "Prefabs/mapPrefabs/map1");
-		MapList.addMap (m_mapsNames[1], "Images/maps/map2_logo", "Prefabs/mapPrefabs/map2");
-		MapList.addMap(m_mapsNames[2], "Images/maps/map3_logo", "Prefabs/mapPrefabs/map3");
-		MapList.addMap (m_mapsNames[3], "Images/maps/feniks_map1_logo", "Prefabs/mapPrefabs/So_what");
-		MapList.addMap (m_mapsNames[4], "Images/maps/feniks_map2_logo", "Prefabs/mapPrefabs/StarStage_1");
-		MapList.addMap (m_mapsNames[5], "Images/maps/logo_1", "Prefabs/mapPrefabs/8march");
-		MapList.addMap(m_mapsNames[6], "Images/maps/map4_logo", "Prefabs/mapPrefabs/map4");
-		gameObject.GetComponent<MenuChooseMap> ().loadMapIcons (m_mapsNames);
-
 		//Rockets
-		m_rocketsNames = new string[4] {"Ракета","Карандаш","Бумажная ракета","Треугольник"};
-		RocketList.clearRocketList();
-		RocketList.addRocket (m_rocketsNames[0], "Prefabs/rocketPrefabs/rocket");
-		RocketList.addRocket (m_rocketsNames[1], "Prefabs/rocketPrefabs/PenRocket");
-		RocketList.addRocket (m_rocketsNames[2], "Prefabs/rocketPrefabs/PaperRocket");
-		RocketList.addRocket (m_rocketsNames[3], "Prefabs/rocketPrefabs/TriangleRocket");
-		foreach (string rName in m_rocketsNames)
-		{
-			(Resources.Load(RocketList.getRocketPath(rName)) as GameObject).GetComponent<RocketControl>().rocketName = rName;
-		}
-
-		//Engines
-		m_enginesNames = new string[4] {"Двигатель","Импульсник","Дымок","Генератор треугольного поля"};
-		RocketList.addEngine (m_enginesNames[0], "Prefabs/enginePrefabs/engine");
-		RocketList.addEngine (m_enginesNames[1], "Prefabs/enginePrefabs/ImpulseEngine");
-		RocketList.addEngine (m_enginesNames[2], "Prefabs/enginePrefabs/WhiteFogEngine");
-		RocketList.addEngine (m_enginesNames[3], "Prefabs/enginePrefabs/TriangleEngine");
-		foreach (string eName in m_enginesNames)
-		{
-			(Resources.Load(RocketList.getEnginePath(eName)) as GameObject).GetComponent<EngineControl>().engineName = eName;
-		}
+		m_rocketsNames = RocketList.GetInstance().GetRocketNamesList();
+		m_enginesNames = RocketList.GetInstance().GetEngineNamesList();
 
 		//Audio
 		m_audioNames = new string[5] {"DontWorry", "DerWienerWalzer", "HevenAndHell", "BeeFly", "ValkyriFly"};
-		AudioList.addAudio (m_audioNames[0], "Music/Bobby McFerrin - Don't Worry, Be Happy");
-		AudioList.addAudio (m_audioNames[1], "Music/Johann Strauss - Der Wiener Walzer");
-		AudioList.addAudio (m_audioNames[2], "Music/Вильгельм Рихард Вагнер - Воплощение ада и рая");
-		AudioList.addAudio (m_audioNames[3], "Music/Римский-Корсаков - Полет шмеля");
-		AudioList.addAudio (m_audioNames[4], "Music/Рихард Вагнер - Полет валькирий");
+		AudioList.addAudio(m_audioNames[0], "Music/Bobby McFerrin - Don't Worry, Be Happy");
+		AudioList.addAudio(m_audioNames[1], "Music/Johann Strauss - Der Wiener Walzer");
+		AudioList.addAudio(m_audioNames[2], "Music/Вильгельм Рихард Вагнер - Воплощение ада и рая");
+		AudioList.addAudio(m_audioNames[3], "Music/Римский-Корсаков - Полет шмеля");
+		AudioList.addAudio(m_audioNames[4], "Music/Рихард Вагнер - Полет валькирий");
 	}
 }

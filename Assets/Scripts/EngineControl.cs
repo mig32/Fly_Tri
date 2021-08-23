@@ -46,7 +46,7 @@ public class EngineControl : MonoBehaviour
 		WorldControl wc = WorldControl.GetInstance();
 		if (wc != null)
 		{
-			wc.addScore(-power_upgrade_cost);
+			wc.AddScore(-power_upgrade_cost);
 		}
 	}
 
@@ -85,7 +85,7 @@ public class EngineControl : MonoBehaviour
 			WorldControl wc = WorldControl.GetInstance();
 			if (wc != null)
 			{
-				wc.playOneShotFX(engineStartSound);
+				wc.PlayOneShotFX(engineStartSound);
 			}
 		}
 	}
@@ -100,10 +100,10 @@ public class EngineControl : MonoBehaviour
 		WorldControl wc = WorldControl.GetInstance();
 		if (wc != null)
 		{
-			wc.stopConstFX();
+			wc.StopConstFX();
 			if (engineStopSound)
 			{
-				wc.playOneShotFX(engineStopSound);
+				wc.PlayOneShotFX(engineStopSound);
 			}
 		}
 	}
@@ -112,9 +112,9 @@ public class EngineControl : MonoBehaviour
 	{
 		transform.parent.GetComponent<Rigidbody2D>().AddForce ((Vector2)transform.parent.up * m_info.enginePower * Time.deltaTime);
 		WorldControl wc = WorldControl.GetInstance();
-		if (engineWorkingSound && wc != null && !wc.isFXSoundPlaying())
+		if (engineWorkingSound && wc != null && !wc.IsFXSoundPlaying())
 		{
-			wc.playConstFX(engineWorkingSound);
+			wc.PlayConstFX(engineWorkingSound);
 		}
 	}
 //=======================================================

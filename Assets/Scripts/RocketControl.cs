@@ -30,7 +30,9 @@ public class RocketControl : MonoBehaviour {
 	public GameObject exlposionAnimation;
 
 	public Sprite rocketSprite;
-	public Sprite destroyedRocketSprite;
+	public GameObject rocketObject;
+	public GameObject destroyedRocketObject;
+	public Collider2D rocketLanding;
 	private GameObject m_engine;
 	private GameObject m_exlposionAnimation;
 	private EngineControl m_engineControl;
@@ -42,6 +44,16 @@ public class RocketControl : MonoBehaviour {
 	{
 		b_isAlive = true;
 		f_currentHealth = m_info.current_durability;
+
+		if (rocketObject)
+		{
+			rocketObject.SetActive(true);
+		}
+
+		if (destroyedRocketObject)
+		{
+			destroyedRocketObject.SetActive(false);
+		}
 	}
 	// Update is called once per frame
 	void Update () 
@@ -57,12 +69,12 @@ public class RocketControl : MonoBehaviour {
 
 			float rotation = Input.GetAxis ("Horizontal");
 			if (rotation != 0) {
-				GetComponent<Rigidbody2D>().fixedAngle = true;
+				GetComponent<Rigidbody2D>().freezeRotation = true;
 				if (rotation > 0)
 					transform.Rotate (0, 0, -1 * (m_info.agility/(GetComponent<Rigidbody2D>().angularDrag/3 + 1)) * Time.deltaTime);
 				else
 					transform.Rotate (0, 0, (m_info.agility/(GetComponent<Rigidbody2D>().angularDrag/3 + 1)) * Time.deltaTime);
-				GetComponent<Rigidbody2D>().fixedAngle = false;
+				GetComponent<Rigidbody2D>().freezeRotation = false;
 			}
 		}
 	}
@@ -101,7 +113,7 @@ public class RocketControl : MonoBehaviour {
 
 	void OnCollisionEnter2D(Collision2D myCollision) 
 	{   
-		if (b_isAlive && myCollision.otherCollider.tag != WorldControl.ROCKET_LANDING_TAG) 
+		if (b_isAlive && myCollision.otherCollider.name != rocketLanding.name) 
 		{
 			if (exlposionAnimation)
 			{
@@ -120,20 +132,21 @@ public class RocketControl : MonoBehaviour {
 				WorldControl wc = WorldControl.GetInstance();
 				if (wc != null)
 				{
-					wc.playOneShotFX(crashSound);
+					wc.PlayOneShotFX(crashSound);
 					m_engineControl.stopEngine();
 					GetComponent<Rigidbody2D>().freezeRotation = false;
 
-					wc.clearTempScore();
+					wc.ClearTempScore();
 					GameProgress.score -= (int)((cost + m_engineControl.cost) / 2);
-					wc.showScore();
+					wc.ShowScore();
 
-					if (destroyedRocketSprite)
+					if (destroyedRocketObject && rocketObject)
 					{
-						gameObject.GetComponent<SpriteRenderer>().sprite = destroyedRocketSprite;
+						rocketObject.SetActive(false);
+						destroyedRocketObject.SetActive(true);
 					}
 
-					wc.startTimer(2.0f, false);
+					wc.StartTimer(2.0f, false);
 				}
 			}
 		}
@@ -147,16 +160,16 @@ public class RocketControl : MonoBehaviour {
 			if (b_isAlive && myCollision.gameObject.name == WorldControl.END_LOCATION_NAME)
 			{
 				//TODO не момнгьпбнпя победа а надо продержаться 2 секунды
-				wc.startTimer(WorldControl.WIN_TIMER, true);
+				wc.StartTimer(WorldControl.WIN_TIMER, true);
 			}
 			else if (b_isAlive && myCollision.tag == WorldControl.COLLECTIBLES_TAG)
 			{
-				if (wc.getMap().GetComponent<MapInfo>().collectSound)
+				if (wc.getMap().GetComponent<MapInfo>().m_collectSound)
 				{
-					wc.playOneShotFX(wc.getMap().GetComponent<MapInfo>().collectSound);
+					wc.PlayOneShotFX(wc.getMap().GetComponent<MapInfo>().m_collectSound);
 				}
 				GameObject.Destroy(myCollision.gameObject);
-				wc.addScore(wc.getMapInfo().coinCost);
+				wc.AddScore(wc.GetMapInfo().m_coinCost);
 			}
 		}
 	}
@@ -168,7 +181,7 @@ public class RocketControl : MonoBehaviour {
 		{
 			if (b_isAlive && myCollision.gameObject.name == WorldControl.END_LOCATION_NAME)
 			{
-				wc.stopTimer();
+				wc.StopTimer();
 			}
 		}
 	}
@@ -188,7 +201,7 @@ public class RocketControl : MonoBehaviour {
 		WorldControl wc = WorldControl.GetInstance();
 		if (wc != null)
 		{
-			wc.addScore(-agility_upgrade_cost);
+			wc.AddScore(-agility_upgrade_cost);
 		}
 	}
 
@@ -202,7 +215,7 @@ public class RocketControl : MonoBehaviour {
 		WorldControl wc = WorldControl.GetInstance();
 		if (wc != null)
 		{
-			wc.addScore(-mass_upgrade_cost);
+			wc.AddScore(-mass_upgrade_cost);
 		}
 	}
 

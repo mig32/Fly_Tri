@@ -1,28 +1,31 @@
 ﻿using UnityEngine;
 using System.Collections;
+using UnityEngine.UI;
 
-public class MapInfo : MonoBehaviour {
-	public string mapName = "map";
-	public float mapGravity = 1.0f;
-	public float mapDrag = 2.0f;
-	public float mapFriction = 1.0f;
-	public float mapBounciness = 0.2f;
-	public string mapDiscription = "Наслаждайся =)";
-	public int coinCost = 100;
-	public Texture2D mapLogo;
-	public Texture2D miniImage;
-	public AudioClip music;
-	public AudioClip collectSound;
+public class MapInfo : MonoBehaviour 
+{
+	public string m_mapName = "map";
+	public float m_mapGravity = 1.0f;
+	public float m_mapDrag = 2.0f;
+	public float m_mapFriction = 1.0f;
+	public float m_mapBounciness = 0.2f;
+	public string m_mapDiscription = "Наслаждайся =)";
+	public int m_coinCost = 100;
+	public Sprite m_mapIcon;
+	public Sprite m_miniImage;
+	public AudioClip m_music;
+	public AudioClip m_collectSound;
 
 	void Start () 
 	{
-		if (!miniImage) 
+		if (m_miniImage = null) 
 		{
-			miniImage = Resources.Load("Images/Default_mini_map") as Texture2D;
+			m_miniImage = MapsHelper.GetDefaultMiniMap();
 		}
-		if (!mapLogo) 
+
+		if (m_mapIcon = null) 
 		{
-			mapLogo = Resources.Load("Images/Default_map_logo") as Texture2D;
+			m_mapIcon = MapsHelper.GetDefaultIcon();
 		}
 	}
 
