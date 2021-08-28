@@ -5,7 +5,14 @@ using UnityEngine.UI;
 public class WorldControl : MonoBehaviour
 {
 	[SerializeField] private GameObject m_mainGUI;
+	[SerializeField] private Transform m_playerTransform;
+	[SerializeField] private AudioSource m_musicAudioSource;
+	[SerializeField] private AudioSource m_playerAudioSource;
+	[SerializeField] private AudioSource m_soundAudioSource;
+
 	public event Action OnScoreUpdated;
+	public event Action<string> OnMessage;
+	public event Action<GameObject> OnRocketCreated;
 
 	public const float WIN_TIMER = 2.0f;
 	private float timer_time;
@@ -27,14 +34,12 @@ public class WorldControl : MonoBehaviour
 	public const float MAX_SOUND_VOLUME = 1.0f;
 	public const float MIN_SOUND_VOLUME = 0.0f;
 
-	public Menu m_mainMenu;
-
 	private int m_currentMapIdx = 0;
 	private Transform thisTransform;
 	private bool b_isPauseOn;
 	private float gameSpeed;
 	private float m_musicVolume = 0.8f;
-	public float m_fxVolume = 1.0f;
+	private float m_fxVolume = 1.0f;
 
 	private string[] m_rocketsNames;
 	private string[] m_enginesNames;
@@ -44,10 +49,7 @@ public class WorldControl : MonoBehaviour
 	private GameObject m_map;
 	private MapInfo m_mapInfo;
 	private GameObject m_rocket;
-	private GameObject m_player;
 	private RocketControl m_rocketControl;
-	private GameObject m_camera;
-	private GameObject m_guiText;
 	public MapList MapList { get; private set; }
 	public SoundController SoundController { get; private set; }
 	private static WorldControl m_instance;
@@ -63,9 +65,6 @@ public class WorldControl : MonoBehaviour
 		m_instance = this;
 		MapList = GetComponent<MapList>();
 		SoundController = GetComponent<SoundController>();
-		m_player = GameObject.Find(PLAYER_OBJECT_NAME).gameObject;
-		m_camera = GameObject.Find(ROCKET_CAMERA_NAME).gameObject; //Камера, которая будет следить за ракетой
-		m_guiText = GameObject.Find(MESSAGE_OBJECT_NAME).gameObject; //guiText для отображения сообщений
 	}
 
 	private void OnDestroy()
@@ -82,7 +81,6 @@ public class WorldControl : MonoBehaviour
 		GameProgress.Load();
 		thisTransform = transform;
 		init();
-		m_mainMenu = gameObject.GetComponent<Menu>();
 	}
 
 	public static WorldControl GetInstance()
@@ -111,15 +109,10 @@ public class WorldControl : MonoBehaviour
 
 	private void instantiateRocket(GameObject rocket)
 	{
-		GameObject temp_rocket = GameObject.Instantiate (rocket) as GameObject;
-		if (m_rocket) GameObject.Destroy(m_rocket);
-		m_rocket = temp_rocket; //Загрузим ракету игрока
-		m_rocket.transform.parent = GameObject.Find(PLAYER_OBJECT_NAME).transform; //Сделаем ее ребенком "player"
+		m_rocket = GameObject.Instantiate<GameObject>(rocket, m_playerTransform);
 		m_rocketControl = m_rocket.GetComponent<RocketControl> ();
+		OnRocketCreated?.Invoke(m_rocket);
 
-		CameraControl cameraScript = m_camera.GetComponent<CameraControl> ();
-		cameraScript.setTargetTransform (m_rocket.transform); //Укажем скрипту камеры за каким объектом следить
-		
 		LoadRocketParameners ();
 	}
 
@@ -199,7 +192,10 @@ public class WorldControl : MonoBehaviour
 	public void EndLevel()
 	{//Уровень закончен - уничтожим карту и ракету
 		ClearTempScore();
-		if (m_map) GameObject.Destroy(m_map.gameObject);
+		if (m_map)
+		{
+			Destroy(m_map.gameObject);
+		}
 		m_rocket.transform.localRotation = Quaternion.identity;
 		m_rocket.transform.localPosition = new Vector3(0,0,0);
 		m_rocketControl.b_isAlive = false;
@@ -229,10 +225,14 @@ public class WorldControl : MonoBehaviour
 	{
 		EndLevel();
 
-		bool isNext = m_currentMapIdx < MapList.Count;
-		if (isNext)
+		if (m_currentMapIdx < MapList.Count - 1)
 		{
 			++m_currentMapIdx;
+		}
+		else
+		{
+			DialogsController.GetInstance().ShowDialog(DialogType.MapSelectorMenu);
+			return;
 		}
 
 		var mapPahs = MapList.GetMapPaths(m_currentMapIdx);
@@ -245,8 +245,8 @@ public class WorldControl : MonoBehaviour
 		map_info.m_mapName = mapPahs.Name;
 		map_info.m_mapIcon = mapPahs.GetMapIcon();
 		GameProgress.SetMap(m_currentMapIdx, false);
-		m_mainMenu.menuMapDiscription.initMenu(m_mainMenu, map_info);
-		m_mainMenu.showMapDiscriptionMenu();
+
+		DialogsController.GetInstance().ShowMapDescriptionMenu(m_currentMapIdx);
 	}
 
 	public void RestartLevel()
@@ -256,18 +256,6 @@ public class WorldControl : MonoBehaviour
 	}
 
 //=================================================================================== Map loaders
-	public void ShowMessage(string text, Color color)
-	{//Большие буквы по центру экрана
-		m_guiText.GetComponent<Text>().enabled = true;
-		m_guiText.GetComponent<Text>().text = text;
-		m_guiText.GetComponent<Text>().color = color;
-
-	}
-
-	public void HideMessage()
-	{
-		m_guiText.GetComponent<Text>().enabled = false;
-	}
 
 	public string[] getRocketsNames()
 	{
@@ -316,21 +304,20 @@ public class WorldControl : MonoBehaviour
 	public void SetMusicVolume(float volume)
 	{
 		SoundController.MusicVolume = volume;
-		var audioSource = m_camera.GetComponent<AudioSource>();
 		m_musicVolume = Mathf.Clamp(volume, MIN_SOUND_VOLUME, MAX_SOUND_VOLUME);
 		if (m_musicVolume < 0.05f)
 		{
-			audioSource.enabled = false;
+			m_musicAudioSource.enabled = false;
 		}
 		else
 		{
-			audioSource.volume = m_musicVolume;
-			if (!audioSource.enabled)
+			m_musicAudioSource.volume = m_musicVolume;
+			if (!m_musicAudioSource.enabled)
 			{
-				audioSource.enabled = true;
-				if (audioSource.clip != null)
+				m_musicAudioSource.enabled = true;
+				if (m_musicAudioSource.clip != null)
 				{
-					audioSource.Play();
+					m_musicAudioSource.Play();
 				}
 			}
 		}
@@ -339,20 +326,18 @@ public class WorldControl : MonoBehaviour
 	public void SetFXVolume(float volume)
 	{
 		SoundController.SoundVolume = volume;
-		var audioSourcePlayer = m_player.GetComponent<AudioSource>();
-		var audioSourceMap = m_guiText.GetComponent<AudioSource>();
 		m_fxVolume = Mathf.Clamp(volume, MIN_SOUND_VOLUME, MAX_SOUND_VOLUME);
 		if (m_fxVolume < 0.05f)
 		{
-			audioSourcePlayer.enabled = false;
-			audioSourceMap.enabled = false;
+			m_playerAudioSource.enabled = false;
+			m_soundAudioSource.enabled = false;
 		}
 		else
 		{
-			audioSourcePlayer.volume = m_fxVolume;
-			audioSourceMap.volume = m_fxVolume;
-			audioSourcePlayer.enabled = true;
-			audioSourceMap.enabled = true;
+			m_playerAudioSource.volume = m_fxVolume;
+			m_soundAudioSource.volume = m_fxVolume;
+			m_playerAudioSource.enabled = true;
+			m_soundAudioSource.enabled = true;
 		}
 	}
 
@@ -381,11 +366,6 @@ public class WorldControl : MonoBehaviour
 		return m_map;
 	}
 
-	public GameObject GetCamera()
-	{
-		return m_camera;
-	}
-
 	public int GetCurrentLevelIdx()
 	{
 		return m_currentMapIdx;
@@ -412,18 +392,17 @@ public class WorldControl : MonoBehaviour
 	public void StopTimer()
 	{
 		m_isTimerStarted = false;
-		HideMessage();
 	}
 
 	private void OnStartTimer(bool isWinTimer)
 	{
 		if (isWinTimer)
 		{
-			ShowMessage(Localization.T_WIN_MESSAGE + " (" + string.Format("{0:0.00}", Mathf.Round (timer_time*100.0f)/100.0f) + ")", Color.green);
+			OnMessage?.Invoke(Localization.T_WIN_MESSAGE + " (" + string.Format("{0:0.00}", Mathf.Round (timer_time*100.0f)/100.0f) + ")");
 		}
 		else
 		{
-			ShowMessage(Localization.T_LOSE_MESSAGE + ((int)((m_rocketControl.cost+m_rocketControl.getEngineControl().cost)/2)).ToString(), Color.red);
+			OnMessage?.Invoke(Localization.T_LOSE_MESSAGE + ((int)((m_rocketControl.cost+m_rocketControl.getEngineControl().cost)/2)).ToString());
 		}
 	}
 
@@ -432,7 +411,7 @@ public class WorldControl : MonoBehaviour
 		if (isWinTimer)
 		{
 			string timeLeft = string.Format("{0:0.00}", Mathf.Round (timer_time*100.0f)/100.0f);
-			m_guiText.GetComponent<Text>().text = Localization.T_WIN_MESSAGE + " (" + timeLeft + ")";
+			OnMessage?.Invoke(Localization.T_WIN_MESSAGE + " (" + timeLeft + ")");
 		}
 	}
 
@@ -441,7 +420,7 @@ public class WorldControl : MonoBehaviour
 		if (isWinTimer)
 		{
 			SaveScore();
-			m_guiText.GetComponent<AudioSource>().Stop();
+			m_soundAudioSource.Stop();
 			GameProgress.SetMap(m_currentMapIdx, true);
 			LoadNextLevel();
 		}
@@ -453,9 +432,9 @@ public class WorldControl : MonoBehaviour
 
 	public void PlayMusic(AudioClip music, float pitch = 1.0f)
 	{
-		GetCamera ().GetComponent<AudioSource>().clip = music;
-		GetCamera ().GetComponent<AudioSource>().pitch = pitch;
-		GetCamera ().GetComponent<AudioSource>().Play ();
+		m_musicAudioSource.clip = music;
+		m_musicAudioSource.pitch = pitch;
+		m_musicAudioSource.Play();
 	}
 
 	public void PlayNextMusic(float pitch = 1.0f)
@@ -475,23 +454,23 @@ public class WorldControl : MonoBehaviour
 
 	public void PlayOneShotFX(AudioClip audioFX)
 	{
-		m_player.GetComponent<AudioSource>().PlayOneShot(audioFX, GetFXVolume());
+		m_playerAudioSource.PlayOneShot(audioFX, GetFXVolume());
 	}
 
 	public void PlayConstFX(AudioClip audioFX)
 	{
-		m_guiText.GetComponent<AudioSource>().clip = audioFX;
-		m_guiText.GetComponent<AudioSource>().Play();
+		m_soundAudioSource.clip = audioFX;
+		m_soundAudioSource.Play();
 	}
 
 	public void StopConstFX()
 	{
-		m_guiText.GetComponent<AudioSource>().Stop ();
+		m_soundAudioSource.Stop();
 	}
 
 	public bool IsFXSoundPlaying()
 	{
-		return m_guiText.GetComponent<AudioSource>().isPlaying || m_player.GetComponent<AudioSource>().isPlaying;
+		return m_soundAudioSource.isPlaying || m_playerAudioSource.isPlaying;
 	}
 
 	void Update()

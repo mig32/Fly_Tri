@@ -62,29 +62,23 @@
     <Compile Include="Assets\Scripts\GUI\MainGuiController.cs" />
     <Compile Include="Assets\Scripts\EngineControl.cs" />
     <Compile Include="Assets\Scripts\RocketControl.cs" />
-    <Compile Include="Assets\Scripts\TestChamberControl.cs" />
     <Compile Include="Assets\Scripts\GUI\BaseDialog.cs" />
     <Compile Include="Assets\Scripts\AudioList.cs" />
-    <Compile Include="Assets\Scripts\GUI\MenuShop.cs" />
     <Compile Include="Assets\Scripts\Localization.cs" />
     <Compile Include="Assets\Scripts\GameProgress.cs" />
-    <Compile Include="Assets\Scripts\GUI\MenuChooseMap.cs" />
+    <Compile Include="Assets\Scripts\GameControllers\SoundController.cs" />
     <Compile Include="Assets\Scripts\GUI\IDialog.cs" />
-    <Compile Include="Assets\Scripts\GUI\MenuMapDiscription.cs" />
     <Compile Include="Assets\Scripts\GUI\MapSelectorItemController.cs" />
     <Compile Include="Assets\Scripts\MapsHelper.cs" />
     <Compile Include="Assets\Scripts\RocketList.cs" />
     <Compile Include="Assets\Scripts\CameraControl.cs" />
-    <Compile Include="Assets\Scripts\GUI\MenuRocketGarage.cs" />
+    <Compile Include="Assets\Scripts\GUI\MapDescriptionMenuController.cs" />
     <Compile Include="Assets\Scripts\MapInfo.cs" />
-    <Compile Include="Assets\Scripts\GUI\Menu.cs" />
     <Compile Include="Assets\Scripts\engine_scripts\ImpulseEngineControl.cs" />
     <Compile Include="Assets\Scripts\MapList.cs" />
     <Compile Include="Assets\Scripts\GameControllers\DialogsController.cs" />
     <Compile Include="Assets\Scripts\GUI\MapSelectorMenuController.cs" />
     <Compile Include="Assets\Scripts\WorldControl.cs" />
-    <Compile Include="Assets\Scripts\GUI\MapDescriptionMenuController.cs" />
-    <Compile Include="Assets\Scripts\GameControllers\SoundController.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\TextMesh Pro\Shaders\TMPro.cginc" />

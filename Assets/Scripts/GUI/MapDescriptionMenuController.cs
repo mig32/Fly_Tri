@@ -57,7 +57,7 @@ public class MapDescriptionMenuController : BaseDialog
 
     public void OnButtonBackPressed()
     {
-        DialogsController.GetInstance().ShowDialog(DialogType.StartMenu);
+        DialogsController.GetInstance().ShowDialog(DialogType.MapSelectorMenu);
         SetActive(false);
     }
 }

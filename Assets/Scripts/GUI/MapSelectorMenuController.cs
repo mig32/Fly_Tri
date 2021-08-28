@@ -50,13 +50,7 @@ public class MapSelectorMenuController : BaseDialog
 
     private void OnMapSelected(int mapIdx)
     {
-        var dialog = DialogsController.GetInstance().ShowDialog(DialogType.MapDescriptionMenu);
-        if (dialog != null)
-        {
-            var mapDescription = (MapDescriptionMenuController)dialog;
-            mapDescription.SetMapIdx(mapIdx);
-        }
-
+        DialogsController.GetInstance().ShowMapDescriptionMenu(mapIdx);
         SetActive(false);
     }
 

@@ -47,7 +47,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e24820e7cf29be5499fe5dbf5ac697a6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rocketName: "\u0420\u0430\u043A\u0435\u0442\u0430"
+  rocketName: "\u0416\u0435\u043B\u0442\u0430\u044F"
   m_info:
     current_max_agility: 200
     agility: 200
@@ -240,6 +240,8 @@ SpriteRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 0
+  m_RayTraceProcedural: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
