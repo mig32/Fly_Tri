@@ -41,4 +41,9 @@ public class MainGuiController : MonoBehaviour
         m_animator.SetTrigger(ShowMessageTrigger);
         m_textMessage.text = message;
     }
+
+    public void OnPauseButtonPressed()
+    {
+        WorldControl.GetInstance().SetPause(true);
+    }
 }

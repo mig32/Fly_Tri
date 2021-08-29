@@ -79,6 +79,10 @@
     <Compile Include="Assets\Scripts\GameControllers\DialogsController.cs" />
     <Compile Include="Assets\Scripts\GUI\MapSelectorMenuController.cs" />
     <Compile Include="Assets\Scripts\WorldControl.cs" />
+    <Compile Include="Assets\Scripts\map_scripts\MovementPath.cs" />
+    <Compile Include="Assets\Scripts\map_scripts\FollowingPathController.cs" />
+    <Compile Include="Assets\Scripts\GUI\MainMenuBase.cs" />
+    <Compile Include="Assets\Scripts\GUI\PauseMenuController.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\TextMesh Pro\Shaders\TMPro.cginc" />

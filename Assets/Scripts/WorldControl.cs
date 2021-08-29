@@ -14,6 +14,8 @@ public class WorldControl : MonoBehaviour
 	public event Action<string> OnMessage;
 	public event Action<GameObject> OnRocketCreated;
 
+	public bool IsInGame { get; private set; }
+
 	public const float WIN_TIMER = 2.0f;
 	private float timer_time;
 	private bool m_isTimerStarted = false;
@@ -36,8 +38,8 @@ public class WorldControl : MonoBehaviour
 
 	private int m_currentMapIdx = 0;
 	private Transform thisTransform;
-	private bool b_isPauseOn;
-	private float gameSpeed;
+	private bool m_isPaused;
+	private float m_gameSpeed;
 	private float m_musicVolume = 0.8f;
 	private float m_fxVolume = 1.0f;
 
@@ -80,7 +82,7 @@ public class WorldControl : MonoBehaviour
 		SetAllLists();
 		GameProgress.Load();
 		thisTransform = transform;
-		init();
+		Init();
 	}
 
 	public static WorldControl GetInstance()
@@ -88,10 +90,10 @@ public class WorldControl : MonoBehaviour
 		return m_instance;
 	}
 
-	public void init()
+	public void Init()
 	{
 		Localization.selectLanguage ("RU");
-		gameSpeed = 1.0f;
+		m_gameSpeed = 1.0f;
 		chooseRocket (m_rocketsNames[0]);
 		chooseEngine (m_enginesNames[0]);
 		PlayMusic (Resources.Load (AudioList.getAudioPath (getAudioNames () [0])) as AudioClip, 1.5f);
@@ -104,27 +106,28 @@ public class WorldControl : MonoBehaviour
 			GameProgress.setBuyedEngine(m_rocketControl.getEngineControl().engineName, m_rocketControl.getEngineControl().m_info);
 		}
 
-		Pause();
+		SetPause(true);
 	}
 
-	private void instantiateRocket(GameObject rocket)
+	private void InstantiateRocket(GameObject rocket)
 	{
 		m_rocket = GameObject.Instantiate<GameObject>(rocket, m_playerTransform);
 		m_rocketControl = m_rocket.GetComponent<RocketControl> ();
 		OnRocketCreated?.Invoke(m_rocket);
 
-		LoadRocketParameners ();
+		LoadRocketParameners();
 	}
 
 	public void chooseRocket(string rocketName)
 	{	
 		GameObject rocket = RocketList.GetInstance().GetRocketPrefab(rocketName);
-		instantiateRocket (rocket);
+		InstantiateRocket (rocket);
 		m_rocketControl.rocketName = rocketName;
 	}
+
 	public void chooseRocket(GameObject rocket)
 	{
-		instantiateRocket (rocket);
+		InstantiateRocket(rocket);
 	}
 
 	public void chooseEngine(string engineName)
@@ -153,13 +156,13 @@ public class WorldControl : MonoBehaviour
 		{
 			GetRocket().GetComponent<Rigidbody2D>().angularDrag = GetRocket().GetComponent<Rigidbody2D>().drag = m_mapInfo.m_mapDrag;
 			GetRocket().GetComponent<Rigidbody2D>().gravityScale = m_mapInfo.m_mapGravity;
+
+			var material = new PhysicsMaterial2D();
+			material.bounciness = m_mapInfo.m_mapBounciness;
+			material.friction = m_mapInfo.m_mapFriction;
 			Collider2D rocketLanding = GetRocket().GetComponent<RocketControl>().rocketLanding;
-			if (!rocketLanding.sharedMaterial)
-			{
-				rocketLanding.sharedMaterial = new PhysicsMaterial2D();
-			}
-			rocketLanding.sharedMaterial.bounciness = m_mapInfo.m_mapBounciness;
-			rocketLanding.sharedMaterial.friction = m_mapInfo.m_mapFriction;
+			rocketLanding.sharedMaterial = material;
+			GetRocket().GetComponent<Collider2D>().sharedMaterial = material;
 		}
 	}
 
@@ -181,12 +184,13 @@ public class WorldControl : MonoBehaviour
 		m_map = GameObject.Instantiate (m_mapPrefab) as GameObject; //Загрузим карту
 		m_mapInfo = m_map.GetComponent<MapInfo> ();
 		m_map.transform.parent = thisTransform; //Удочерим ее
-		SetMapPhysicParametres ();
+		SetMapPhysicParametres();
 		GetRocket().transform.position = GameObject.Find(START_LOCATION_NAME).transform.position; // Поставим ракету на начельную позицию на карте
 		GetRocket().SetActive(true);// .GetComponent<SpriteRenderer>().enabled = true;
 		m_rocket.GetComponent<Rigidbody2D>().isKinematic = false;
 		m_rocketControl.Reset();
-		UnPause();
+		SetPause(false);
+		IsInGame = true;
 	}
 
 	public void EndLevel()
@@ -272,33 +276,39 @@ public class WorldControl : MonoBehaviour
 		return m_audioNames;
 	}
 
-	public void Pause()
+	public void SetPause(bool isPause)
 	{
-		b_isPauseOn = true;
-		Time.timeScale = 0.0f;
-	}
-	
-	public void UnPause()
-	{
-		b_isPauseOn = false;
-		Time.timeScale = gameSpeed;
+		m_isPaused = isPause;
+		Time.timeScale = isPause? 0.0f : m_gameSpeed;
+
+		if (IsInGame)
+		{
+			if (isPause)
+			{
+				DialogsController.GetInstance().ShowDialog(DialogType.PauseMenu);
+			}
+			else
+			{
+				DialogsController.GetInstance().CloseAllDialogs();
+			}
+		}
 	}
 
-	public bool isPaused()
+	public bool IsPaused()
 	{
-		return b_isPauseOn;
+		return m_isPaused;
 	}
 
 	public void setGameSpeed(float speed)
 	{
 		Mathf.Clamp (speed, MIN_GAME_SPEED, MAX_GAME_SPEED);
-		gameSpeed = speed;
-		Time.timeScale = gameSpeed;
+		m_gameSpeed = speed;
+		Time.timeScale = m_gameSpeed;
 	}
 
 	public float getGameSpeed()
 	{
-		return gameSpeed;
+		return m_gameSpeed;
 	}
 
 	public void SetMusicVolume(float volume)
@@ -484,6 +494,11 @@ public class WorldControl : MonoBehaviour
 				OnStopTimer (m_isWinTimer);
 			}
 			OnTimerTick(m_isWinTimer);
+		}
+
+		if (IsInGame && Input.GetKeyDown(KeyCode.Escape))
+		{
+			SetPause(!m_isPaused); 
 		}
 	}
 

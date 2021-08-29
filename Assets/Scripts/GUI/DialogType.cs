@@ -2,5 +2,6 @@
 {
     StartMenu,
     MapSelectorMenu,
-    MapDescriptionMenu
+    MapDescriptionMenu,
+    PauseMenu
 }

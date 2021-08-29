@@ -54,9 +54,20 @@ public class DialogsController : MonoBehaviour
         return dialog;
     }
 
+    public void CloseAllDialogs()
+    {
+        foreach (var dialog in m_dialogs)
+        {
+            if (dialog.IsActive)
+            {
+                dialog.SetActive(false);
+            }
+        }
+    }
+
     public void ShowMapDescriptionMenu(int mapIdx)
     {
-        var dialog = DialogsController.GetInstance().ShowDialog(DialogType.MapDescriptionMenu);
+        var dialog = ShowDialog(DialogType.MapDescriptionMenu);
         if (dialog != null)
         {
             var mapDescription = (MapDescriptionMenuController)dialog;

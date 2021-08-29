@@ -103,7 +103,7 @@ public static class GameProgress
 		WorldControl wc = WorldControl.GetInstance();
 		if (wc != null)
 		{
-			wc.init();
+			wc.Init();
 		}
 	}
 
