@@ -2,8 +2,12 @@
 
 public class SoundController : MonoBehaviour
 {
-    private float m_soundVolume;
-    private float m_musicVolume;
+    [SerializeField] private AudioSource m_musicAudioSource;
+    [SerializeField] private AudioSource m_shortSoundAudioSource;
+    [SerializeField] private AudioSource m_engineAudioSource;
+    [SerializeField] private float m_soundVolume;
+    [SerializeField] private float m_musicVolume;
+
     private readonly string c_soundKey = "sound";
     private readonly string c_musicKey = "music";
 
@@ -21,8 +25,8 @@ public class SoundController : MonoBehaviour
 
     private void Awake()
     {
-        m_soundVolume = PlayerPrefs.GetFloat(c_soundKey, 0.5f);
-        m_musicVolume = PlayerPrefs.GetFloat(c_musicKey, 0.5f);
+        SoundVolume = PlayerPrefs.GetFloat(c_soundKey, m_soundVolume);
+        MusicVolume = PlayerPrefs.GetFloat(c_musicKey, m_musicVolume);
     }
 
     private void Update()
@@ -38,9 +42,8 @@ public class SoundController : MonoBehaviour
             return;
         }
 
-        PlayerPrefs.SetFloat(c_soundKey, SoundVolume);
-        PlayerPrefs.Save();
-        PlayerPrefs.SetFloat(c_musicKey, MusicVolume);
+        PlayerPrefs.SetFloat(c_soundKey, m_soundVolume);
+        PlayerPrefs.SetFloat(c_musicKey, m_musicVolume);
         PlayerPrefs.Save();
     }
 
@@ -57,13 +60,18 @@ public class SoundController : MonoBehaviour
                 m_soundVolume = 0;
             }
 
-            if (m_soundVolume == value)
-            {
-                return;
-            }
-
-            m_soundVolume = value;
+            m_soundVolume = Mathf.Clamp(value, 0.0f, 1.1f);
             Save();
+
+            var isEnabled = m_soundVolume > 0.05f;
+            m_shortSoundAudioSource.enabled = isEnabled;
+            m_engineAudioSource.enabled = isEnabled;
+
+            if (isEnabled)
+            {
+                m_shortSoundAudioSource.volume = m_soundVolume;
+                m_engineAudioSource.volume = m_soundVolume;
+            }
         }
     }
 
@@ -80,13 +88,53 @@ public class SoundController : MonoBehaviour
                 m_musicVolume = 0;
             }
 
-            if (m_musicVolume == value)
-            {
-                return;
-            }
-
-            m_musicVolume = value;
+            m_musicVolume = Mathf.Clamp(value, 0.0f, 1.1f);
             Save();
+
+            bool wasEnabled = m_musicAudioSource.enabled;
+            m_musicAudioSource.enabled = m_musicVolume > 0.05f;
+            if (m_musicAudioSource.enabled)
+            {
+                m_musicAudioSource.volume = m_musicVolume;
+                if (!wasEnabled && m_musicAudioSource.clip != null)
+                {
+                    m_musicAudioSource.Play();
+                }
+            }
         }
+    }
+
+    public void PlayMusic(AudioClip clip)
+    {
+        m_musicAudioSource.clip = clip;
+        m_musicAudioSource.Play();
+    }
+
+    public void PlayShortSound(AudioClip clip)
+    {
+        m_shortSoundAudioSource.PlayOneShot(clip);
+    }
+
+    public void SetEngineAudioClip(AudioClip clip)
+    {
+        m_engineAudioSource.clip = clip;
+    }
+
+    public void PlayEngineSound()
+    {
+        if (m_engineAudioSource.clip)
+        {
+            m_engineAudioSource.Play();
+        }
+    }
+
+    public void StopEngineSound()
+    {
+        m_engineAudioSource.Stop();
+    }
+
+    public bool IsEngineSoundPlaying()
+    {
+        return m_engineAudioSource.isPlaying;
     }
 }

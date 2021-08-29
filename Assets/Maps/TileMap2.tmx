@@ -113,10 +113,4 @@
 </chunk>
   </data>
  </layer>
- <objectgroup id="2" name="Слой объектов 1">
-  <object id="1" name="start_location" type="start_location" x="31" y="56.6667">
-   <point/>
-  </object>
-  <object id="2" name="end_location" type="end_location" x="-324" y="286" width="200" height="130"/>
- </objectgroup>
 </map>

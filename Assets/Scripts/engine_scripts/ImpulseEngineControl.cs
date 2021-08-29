@@ -3,30 +3,26 @@ using System.Collections;
 
 public class ImpulseEngineControl : EngineControl {
 
-	override public void onEngineStart()
+	override public void OnEngineStart()
 	{
 		ParticleSystem particleSystem = GetComponent<ParticleSystem>();
 		if (particleSystem != null)
 		{
 			particleSystem.Play();
 		}
-		transform.parent.GetComponent<Rigidbody2D>().AddForce ((Vector2)transform.parent.up * m_info.enginePower * Time.deltaTime);
-		if (engineStartSound)
+		transform.parent.GetComponent<Rigidbody2D>().AddForce ((Vector2)transform.parent.up * m_power * Time.deltaTime);
+		if (m_engineStartSound)
 		{
-			WorldControl wc = WorldControl.GetInstance();
-			if (wc != null)
-			{
-				wc.PlayOneShotFX(engineStartSound);
-			}
+			WorldControl.GetInstance().soundController.PlayShortSound(m_engineStartSound);
 		}
 	}
 	
-	override public void onEngineStop()
+	override public void OnEngineStop()
 	{
 
 	}
 	
-	override public void onEngineWorking()
+	override public void OnEngineWorking()
 	{
 
 	}

@@ -6,9 +6,6 @@ public class WorldControl : MonoBehaviour
 {
 	[SerializeField] private GameObject m_mainGUI;
 	[SerializeField] private Transform m_playerTransform;
-	[SerializeField] private AudioSource m_musicAudioSource;
-	[SerializeField] private AudioSource m_playerAudioSource;
-	[SerializeField] private AudioSource m_soundAudioSource;
 
 	public event Action<string> OnMessage;
 	public event Action<GameObject> OnRocketCreated;
@@ -53,7 +50,7 @@ public class WorldControl : MonoBehaviour
 	private GameObject m_rocket;
 	private RocketControl m_rocketControl;
 	public MapList MapList { get; private set; }
-	public SoundController SoundController { get; private set; }
+	public SoundController soundController { get; private set; }
 	private static WorldControl m_instance;
 
 	private void Awake()
@@ -66,7 +63,7 @@ public class WorldControl : MonoBehaviour
 
 		m_instance = this;
 		MapList = GetComponent<MapList>();
-		SoundController = GetComponent<SoundController>();
+		soundController = GetComponent<SoundController>();
 	}
 
 	private void OnDestroy()
@@ -96,15 +93,7 @@ public class WorldControl : MonoBehaviour
 		m_gameSpeed = 1.0f;
 		chooseRocket (m_rocketsNames[0]);
 		chooseEngine (m_enginesNames[0]);
-		PlayMusic (Resources.Load (AudioList.getAudioPath (getAudioNames () [0])) as AudioClip, 1.5f);
-		if (!GameProgress.buyedRockets.ContainsKey(m_rocketControl.rocketName))
-		{
-			GameProgress.setBuyedRocket(m_rocketControl.rocketName, m_rocketControl.m_info);
-		}
-		if (!GameProgress.buyedEngines.ContainsKey(m_rocketControl.getEngineControl().engineName))
-		{
-			GameProgress.setBuyedEngine(m_rocketControl.getEngineControl().engineName, m_rocketControl.getEngineControl().m_info);
-		}
+		soundController.PlayMusic(Resources.Load< AudioClip>(AudioList.getAudioPath (getAudioNames() [0])));
 
 		SetPause(true);
 	}
@@ -112,17 +101,15 @@ public class WorldControl : MonoBehaviour
 	private void InstantiateRocket(GameObject rocket)
 	{
 		m_rocket = GameObject.Instantiate<GameObject>(rocket, m_playerTransform);
-		m_rocketControl = m_rocket.GetComponent<RocketControl> ();
+		m_rocket.GetComponent<Rigidbody2D>().isKinematic = true;
+		m_rocketControl = m_rocket.GetComponent<RocketControl>();
 		OnRocketCreated?.Invoke(m_rocket);
-
-		LoadRocketParameners();
 	}
 
 	public void chooseRocket(string rocketName)
 	{	
 		GameObject rocket = RocketList.GetInstance().GetRocketPrefab(rocketName);
-		InstantiateRocket (rocket);
-		m_rocketControl.rocketName = rocketName;
+		InstantiateRocket(rocket);
 	}
 
 	public void chooseRocket(GameObject rocket)
@@ -133,21 +120,11 @@ public class WorldControl : MonoBehaviour
 	public void chooseEngine(string engineName)
 	{	
 		m_rocketControl.setEngine(RocketList.GetInstance().GetEnginePrefab(engineName));
-		m_rocketControl.getEngineControl ().engineName = engineName;
 	}
 	
 	public void chooseEngine(GameObject engine)
 	{
 		m_rocketControl.setEngine(engine);
-	}
-
-	public void LoadRocketParameners()
-	{
-		if (GameProgress.buyedRockets.ContainsKey(m_rocketControl.rocketName))
-		{
-			m_rocketControl.m_info = GameProgress.buyedRockets[m_rocketControl.rocketName];
-		}
-		GetRocket().GetComponent<Rigidbody2D>().mass = m_rocketControl.m_info.mass;
 	}
 
 	public void SetMapPhysicParametres()
@@ -185,12 +162,14 @@ public class WorldControl : MonoBehaviour
 		m_mapInfo = m_map.GetComponent<MapInfo> ();
 		m_map.transform.parent = thisTransform; //Удочерим ее
 		SetMapPhysicParametres();
-		GetRocket().transform.position = GameObject.Find(START_LOCATION_NAME).transform.position; // Поставим ракету на начельную позицию на карте
+		GetRocket().transform.position = m_mapInfo.m_startLocation.position; // Поставим ракету на начельную позицию на карте
+		GetRocket().transform.rotation = m_mapInfo.m_startLocation.rotation; // Поставим ракету на начельную позицию на карте
 		GetRocket().SetActive(true);// .GetComponent<SpriteRenderer>().enabled = true;
 		m_rocket.GetComponent<Rigidbody2D>().isKinematic = false;
 		m_rocketControl.Reset();
 		SetPause(false);
 		IsInGame = true;
+		CheckAndActiateCheckpoints();
 	}
 
 	public void EndLevel()
@@ -199,6 +178,9 @@ public class WorldControl : MonoBehaviour
 		{
 			Destroy(m_map.gameObject);
 		}
+
+		soundController.StopEngineSound();
+
 		m_rocket.transform.localRotation = Quaternion.identity;
 		m_rocket.transform.localPosition = new Vector3(0,0,0);
 		m_rocketControl.KillRocketSilent();
@@ -307,52 +289,22 @@ public class WorldControl : MonoBehaviour
 
 	public void SetMusicVolume(float volume)
 	{
-		SoundController.MusicVolume = volume;
-		m_musicVolume = Mathf.Clamp(volume, MIN_SOUND_VOLUME, MAX_SOUND_VOLUME);
-		if (m_musicVolume < 0.05f)
-		{
-			m_musicAudioSource.enabled = false;
-		}
-		else
-		{
-			m_musicAudioSource.volume = m_musicVolume;
-			if (!m_musicAudioSource.enabled)
-			{
-				m_musicAudioSource.enabled = true;
-				if (m_musicAudioSource.clip != null)
-				{
-					m_musicAudioSource.Play();
-				}
-			}
-		}
+		soundController.MusicVolume = volume;
 	}
 
 	public void SetFXVolume(float volume)
 	{
-		SoundController.SoundVolume = volume;
-		m_fxVolume = Mathf.Clamp(volume, MIN_SOUND_VOLUME, MAX_SOUND_VOLUME);
-		if (m_fxVolume < 0.05f)
-		{
-			m_playerAudioSource.enabled = false;
-			m_soundAudioSource.enabled = false;
-		}
-		else
-		{
-			m_playerAudioSource.volume = m_fxVolume;
-			m_soundAudioSource.volume = m_fxVolume;
-			m_playerAudioSource.enabled = true;
-			m_soundAudioSource.enabled = true;
-		}
+		soundController.SoundVolume = volume;
 	}
 
 	public float GetFXVolume()
 	{
-		return SoundController.SoundVolume;
+		return soundController.SoundVolume;
 	}
 
 	public float GetMusicVolume()
 	{
-		return SoundController.MusicVolume;
+		return soundController.MusicVolume;
 	}
 
 	public GameObject GetRocket()
@@ -419,11 +371,34 @@ public class WorldControl : MonoBehaviour
 		}
 	}
 
+	public void ShowMessage(string message)
+	{
+		OnMessage?.Invoke(message);
+	}
+
+	public void OnCheckpointCollected()
+	{
+		CheckAndActiateCheckpoints();
+	}
+
+	private void CheckAndActiateCheckpoints()
+	{
+		var checkpoint = m_mapInfo.GetNextCheckpoint();
+		if (checkpoint != null)
+		{
+			checkpoint.Activate();
+		}
+		else
+		{
+			GameProgress.SetMap(m_currentMapIdx, true);
+			LoadNextLevel();
+		}
+	}
+
 	private void OnStopTimer(bool isWinTimer)
 	{
 		if (isWinTimer)
 		{
-			m_soundAudioSource.Stop();
 			GameProgress.SetMap(m_currentMapIdx, true);
 			LoadNextLevel();
 		}
@@ -431,49 +406,6 @@ public class WorldControl : MonoBehaviour
 		{
 			RestartLevel();
 		}
-	}
-
-	public void PlayMusic(AudioClip music, float pitch = 1.0f)
-	{
-		m_musicAudioSource.clip = music;
-		m_musicAudioSource.pitch = pitch;
-		m_musicAudioSource.Play();
-	}
-
-	public void PlayNextMusic(float pitch = 1.0f)
-	{
-		bool isNext = false;
-		foreach (string name in m_audioNames)
-		{
-			if (isNext) 
-			{
-				PlayMusic(Resources.Load (AudioList.getAudioPath (name)) as AudioClip, pitch);
-				return;
-			}
-			if (name == AudioList.currentAudioName) isNext = true;
-		}
-		PlayMusic(Resources.Load (AudioList.getAudioPath (getAudioNames () [0])) as AudioClip, pitch);
-	}
-
-	public void PlayOneShotFX(AudioClip audioFX)
-	{
-		m_playerAudioSource.PlayOneShot(audioFX, GetFXVolume());
-	}
-
-	public void PlayConstFX(AudioClip audioFX)
-	{
-		m_soundAudioSource.clip = audioFX;
-		m_soundAudioSource.Play();
-	}
-
-	public void StopConstFX()
-	{
-		m_soundAudioSource.Stop();
-	}
-
-	public bool IsFXSoundPlaying()
-	{
-		return m_soundAudioSource.isPlaying || m_playerAudioSource.isPlaying;
 	}
 
 	void Update()

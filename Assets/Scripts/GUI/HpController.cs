@@ -16,6 +16,12 @@ public class HpController : MonoBehaviour
     {
         WorldControl.GetInstance().OnHPChanged += OnValueChanged;
         WorldControl.GetInstance().OnRocketCreated += OnRocketCreated;
+
+        var rocket = WorldControl.GetInstance().GetRocket();
+        if (rocket)
+        {
+            OnRocketCreated(rocket);
+        }
     }
 
     public void OnRocketCreated(GameObject rocket)

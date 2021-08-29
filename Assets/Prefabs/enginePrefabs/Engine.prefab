@@ -45,20 +45,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 55bf91455124f8249b84cd24e4b59d2d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  engineName: "\u0414\u0432\u0438\u0433\u0430\u0442\u0435\u043B\u044C"
-  m_info:
-    current_max_power: 1000
-    enginePower: 400
-    current_min_power: 0
-  max_engine_power: 2000
-  min_engine_power: 0
-  power_upgrade_step: 100
-  power_upgrade_cost: 500
-  cost: 500
-  image: {fileID: 2800000, guid: f1349d70ea180644b855631543d9ea67, type: 3}
-  engineStartSound: {fileID: 0}
-  engineWorkingSound: {fileID: 8300000, guid: 2b87bc92351c5484cb96f8cf27ec4f10, type: 3}
-  engineStopSound: {fileID: 0}
+  m_name: 
+  m_power: 300
+  m_image: {fileID: 0}
+  m_engineStartSound: {fileID: 0}
+  m_engineWorkingSound: {fileID: 8300000, guid: f5da8bf1017106347b73db99ba093c0c,
+    type: 3}
+  m_engineStopSound: {fileID: 0}
 --- !u!198 &1448438215601815833
 ParticleSystem:
   m_ObjectHideFlags: 0

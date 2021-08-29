@@ -121,32 +121,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e24820e7cf29be5499fe5dbf5ac697a6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rocketName: "\u0411\u0443\u043C\u0430\u0436\u043D\u0430\u044F \u0440\u0430\u043A\u0435\u0442\u0430"
-  m_info:
-    current_max_agility: 300
-    agility: 100
-    current_min_agility: 0
-    current_max_mass: 1
-    mass: 0.5
-    current_min_mass: 0.5
-    current_durability: 1.5
-  max_agility: 500
-  min_agility: 0
-  agility_upgrade_step: 50
-  agility_upgrade_cost: 500
-  max_mass: 1
-  min_mass: 0.01
-  mass_upgrade_step: 0.1
-  mass_upgrade_cost: 1000
-  cost: 9999
+  m_rocketName: PaperRocket
+  m_agility: 100
+  m_mass: 0.5
+  m_durability: 1.5
   crashSound: {fileID: 8300000, guid: 50aebb4e0addc5148a417d1190c86c89, type: 3}
   exlposionAnimation: {fileID: 100000, guid: cbfb081b9e4711c429bd7fb73ab2ea5e, type: 3}
   rocketSprite: {fileID: 21300000, guid: 61884e38f834f094e98327df686c9d0c, type: 3}
   rocketObject: {fileID: 8223068860235355106}
   destroyedRocketObject: {fileID: 7578124001261611585}
   rocketLanding: {fileID: 6000002}
-  f_currentHealth: 0
-  b_isAlive: 1
 --- !u!50 &5000000
 Rigidbody2D:
   serializedVersion: 4

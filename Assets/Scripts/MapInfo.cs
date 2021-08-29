@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
 using UnityEngine.UI;
+using System.Collections.Generic;
+using System.Linq;
 
 public class MapInfo : MonoBehaviour 
 {
@@ -15,8 +17,10 @@ public class MapInfo : MonoBehaviour
 	public Sprite m_miniImage;
 	public AudioClip m_music;
 	public AudioClip m_collectSound;
+	public Transform m_startLocation;
+	public List<TriggerEndZone> m_targetLocations;
 
-	void Start () 
+	private void Start () 
 	{
 		if (m_miniImage = null) 
 		{
@@ -29,6 +33,31 @@ public class MapInfo : MonoBehaviour
 		}
 	}
 
+	public TriggerEndZone GetNextCheckpoint()
+	{
+		return m_targetLocations.FirstOrDefault(endZone => !endZone.IsChecked);
+	}
 
+	public void OnDrawGizmos()
+	{
+		if (m_startLocation != null)
+		{
+			var pos = m_startLocation.position;
+			pos.y += 0.4f;
+			Gizmos.DrawIcon(pos, "StartLocationGizmo.jpg", true);
+		}
+
+		if (m_targetLocations != null && m_targetLocations.Any())
+		{
+			foreach (var target in m_targetLocations)
+			{
+				var targetCollider = target.GetComponent<Collider2D>();
+				if (targetCollider != null)
+				{
+					Gizmos.DrawWireCube(targetCollider.bounds.center, targetCollider.bounds.size);
+				}
+			}
+		}
+	}
 }
 

@@ -441,8 +441,8 @@ AudioSource:
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 0}
-  m_PlayOnAwake: 1
-  m_Volume: 1
+  m_PlayOnAwake: 0
+  m_Volume: 0.2
   m_Pitch: 1
   Loop: 1
   Mute: 0
@@ -537,7 +537,7 @@ GameObject:
   - component: {fileID: 272144800}
   - component: {fileID: 272144801}
   m_Layer: 0
-  m_Name: SoundAudioSource
+  m_Name: EngineAudioSource
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -568,10 +568,10 @@ AudioSource:
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 0}
-  m_PlayOnAwake: 1
-  m_Volume: 1
+  m_PlayOnAwake: 0
+  m_Volume: 0.2
   m_Pitch: 1
-  Loop: 0
+  Loop: 1
   Mute: 0
   Spatialize: 0
   SpatializePostEffects: 0
@@ -723,7 +723,7 @@ Camera:
     width: 1
     height: 1
   near clip plane: -3
-  far clip plane: 3
+  far clip plane: 1000
   field of view: 60
   orthographic: 1
   orthographic size: 3
@@ -769,7 +769,7 @@ GameObject:
   - component: {fileID: 344363955}
   - component: {fileID: 344363956}
   m_Layer: 0
-  m_Name: PlayerAudioSource
+  m_Name: ShortSoundAudioSource
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -800,8 +800,8 @@ AudioSource:
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 0}
-  m_PlayOnAwake: 1
-  m_Volume: 1
+  m_PlayOnAwake: 0
+  m_Volume: 0.2
   m_Pitch: 1
   Loop: 0
   Mute: 0
@@ -1219,9 +1219,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_mainGUI: {fileID: 2105281730}
   m_playerTransform: {fileID: 999637339}
-  m_musicAudioSource: {fileID: 206909622}
-  m_playerAudioSource: {fileID: 344363956}
-  m_soundAudioSource: {fileID: 272144801}
 --- !u!4 &1549570627
 Transform:
   m_ObjectHideFlags: 0
@@ -1305,6 +1302,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e4fa2c16ce5015440a545af6a4e42e60, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_musicAudioSource: {fileID: 206909622}
+  m_shortSoundAudioSource: {fileID: 344363956}
+  m_engineAudioSource: {fileID: 272144801}
+  m_soundVolume: 0
+  m_musicVolume: 0
 --- !u!850595691 &1920729182
 LightingSettings:
   m_ObjectHideFlags: 0

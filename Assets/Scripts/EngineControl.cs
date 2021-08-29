@@ -1,124 +1,94 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-[System.Serializable]
-public class EngineInfo
-{
-	public float current_max_power;
-	public float enginePower;
-	public float current_min_power;
-}
-
 public class EngineControl : MonoBehaviour
 {
-	public string engineName;
-	public EngineInfo m_info;
-	public float max_engine_power;
-	public float min_engine_power;
-	public float power_upgrade_step;
-	public int power_upgrade_cost;
-	public int cost;
-	public Texture2D image;
-	public AudioClip engineStartSound;
-	public AudioClip engineWorkingSound;
-	public AudioClip engineStopSound;
+	[SerializeField] protected string m_name;
+	[SerializeField] protected float m_power;
+	[SerializeField] protected Texture2D m_image;
+	[SerializeField] protected AudioClip m_engineStartSound;
+	[SerializeField] protected AudioClip m_engineWorkingSound;
+	[SerializeField] protected AudioClip m_engineStopSound;
 
-
-
-	private bool b_isEngineWorking = false;
+	private bool m_isEngineWorking = false;
 
 	void Start()
 	{
-	}
-
-	public virtual void upgradeEngine()
-	{
-		m_info.current_max_power += power_upgrade_step;
-		if (m_info.current_max_power > max_engine_power)
+		if (m_engineWorkingSound)
 		{
-			m_info.current_max_power = max_engine_power;
-		}
-		m_info.current_min_power -= power_upgrade_step;
-		if (m_info.current_min_power < min_engine_power)
-		{
-			m_info.current_min_power = min_engine_power;
+			WorldControl.GetInstance().soundController.SetEngineAudioClip(m_engineWorkingSound);
 		}
 	}
 
-	public void setEnginePower(float power)
-	{
-		m_info.enginePower = power;
-	}
 
-	public float getEnginePower()
+	public void SetEngineActive(bool isActive)
 	{
-		return m_info.enginePower;
-	}
+		if (m_isEngineWorking == isActive)
+		{
+			return;
+		}
 
-	public void startEngine ()
-	{
-		b_isEngineWorking = true;
-		onEngineStart ();
-	}
-
-	public void stopEngine ()
-	{
-		b_isEngineWorking = false;
-		onEngineStop ();
+		m_isEngineWorking = isActive;
+		if (isActive)
+		{
+			OnEngineStart();
+		}
+		else
+		{
+			OnEngineStop();
+		}
 	}
 
 //=======================================================
-	public virtual void onEngineStart()
+	public virtual void OnEngineStart()
 	{
 		ParticleSystem particleSystem = GetComponent<ParticleSystem>();
-		if (particleSystem != null)
+		if (particleSystem)
 		{
 			particleSystem.Play();
 		}
-		if (engineStartSound)
+
+		if (m_engineStartSound)
 		{
-			WorldControl wc = WorldControl.GetInstance();
-			if (wc != null)
-			{
-				wc.PlayOneShotFX(engineStartSound);
-			}
+			WorldControl.GetInstance().soundController.PlayShortSound(m_engineStartSound);
+		}
+
+		if (m_engineWorkingSound)
+		{
+			WorldControl.GetInstance().soundController.PlayEngineSound();
 		}
 	}
 
-	public virtual void onEngineStop()
+	public virtual void OnEngineStop()
 	{
 		ParticleSystem particleSystem = GetComponent<ParticleSystem>();
-		if (particleSystem != null)
+		if (particleSystem)
 		{
 			particleSystem.Stop();
 		}
-		WorldControl wc = WorldControl.GetInstance();
-		if (wc != null)
+		
+		if (m_engineStopSound)
 		{
-			wc.StopConstFX();
-			if (engineStopSound)
-			{
-				wc.PlayOneShotFX(engineStopSound);
-			}
+			WorldControl.GetInstance().soundController.PlayShortSound(m_engineStopSound);
+		}
+
+		if (m_engineWorkingSound)
+		{
+			WorldControl.GetInstance().soundController.StopEngineSound();
 		}
 	}
 
-	public virtual void onEngineWorking()
+	public virtual void OnEngineWorking()
 	{
-		transform.parent.GetComponent<Rigidbody2D>().AddForce ((Vector2)transform.parent.up * m_info.enginePower * Time.deltaTime);
-		WorldControl wc = WorldControl.GetInstance();
-		if (engineWorkingSound && wc != null && !wc.IsFXSoundPlaying())
-		{
-			wc.PlayConstFX(engineWorkingSound);
-		}
+		transform.parent.GetComponent<Rigidbody2D>().AddForce ((Vector2)transform.parent.up * m_power * Time.deltaTime);
 	}
 //=======================================================
 
-	void Update () 
+	void FixedUpdate() 
 	{
-		if (b_isEngineWorking)
+		if (m_isEngineWorking)
 		{
-			onEngineWorking();
+			OnEngineWorking();
 		}
 	}
 }

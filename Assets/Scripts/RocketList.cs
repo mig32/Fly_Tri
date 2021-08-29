@@ -104,16 +104,6 @@ public class RocketList : MonoBehaviour
 	private void Awake()
 	{
 		m_instance = this;
-
-		foreach (StringPrefabPair pair in m_rockets.m_array)
-		{
-			pair._prefab.GetComponent<RocketControl>().rocketName = pair._name;
-		}
-
-		foreach (StringPrefabPair pair in m_engines.m_array)
-		{
-			pair._prefab.GetComponent<EngineControl>().engineName = pair._name;
-		}
 	}
 
 	public GameObject GetRocketPrefab(string name)
