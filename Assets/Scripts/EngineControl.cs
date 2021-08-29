@@ -43,11 +43,6 @@ public class EngineControl : MonoBehaviour
 		{
 			m_info.current_min_power = min_engine_power;
 		}
-		WorldControl wc = WorldControl.GetInstance();
-		if (wc != null)
-		{
-			wc.AddScore(-power_upgrade_cost);
-		}
 	}
 
 	public void setEnginePower(float power)

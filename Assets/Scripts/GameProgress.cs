@@ -5,17 +5,12 @@ using System;
 
 public static class GameProgress
 {
-	public static int score = 5000;
-	public static int tempScore = 0;
 	public static Dictionary<int, bool> maps = new Dictionary<int, bool>();
 	public static Dictionary<string, RocketInfo> buyedRockets = new Dictionary<string, RocketInfo>();
 	public static Dictionary<string, EngineInfo> buyedEngines = new Dictionary<string, EngineInfo>();
 
 	public static void Save()
 	{
-		PlayerPrefs.SetInt("score", score);
-		PlayerPrefs.SetInt("tempScore", tempScore);
-
 		string temp = "";
 		foreach (int mapIdx in maps.Keys)
 		{
@@ -48,14 +43,6 @@ public static class GameProgress
 	public static void Load()
 	{
 		Init();
-		if (PlayerPrefs.HasKey("score"))
-		{
-			score = PlayerPrefs.GetInt("score");
-		}
-		if (PlayerPrefs.HasKey("tempScore"))
-		{
-			tempScore = PlayerPrefs.GetInt("tempScore");
-		}
 		if (PlayerPrefs.HasKey("maps"))
 		{
 			string[] temp = PlayerPrefs.GetString("maps").Split('\n');
@@ -109,8 +96,6 @@ public static class GameProgress
 
 	private static void Init()
 	{
-		score = 5000;
-		tempScore = 0;
 		maps.Clear();
 		buyedRockets.Clear();
 		buyedEngines.Clear();

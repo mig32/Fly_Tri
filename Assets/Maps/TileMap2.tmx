@@ -118,26 +118,5 @@
    <point/>
   </object>
   <object id="2" name="end_location" type="end_location" x="-324" y="286" width="200" height="130"/>
-  <object id="4" name="coin_location" type="coin_location" x="417.334" y="273">
-   <point/>
-  </object>
-  <object id="5" name="coin_location" type="coin_location" x="736.084" y="-139.917">
-   <point/>
-  </object>
-  <object id="6" name="coin_location" type="coin_location" x="192.334" y="-942.334">
-   <point/>
-  </object>
-  <object id="7" name="coin_location" type="coin_location" x="-480" y="435.333">
-   <point/>
-  </object>
-  <object id="8" name="coin_location" type="coin_location" x="-415.667" y="-115.083">
-   <point/>
-  </object>
-  <object id="9" name="coin_location" type="coin_location" x="-3.33333e-05" y="-484">
-   <point/>
-  </object>
-  <object id="10" name="moving_block" type="moving_block" x="-733.333" y="-385.333">
-   <polyline points="0,0 218.667,0"/>
-  </object>
  </objectgroup>
 </map>

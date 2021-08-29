@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System;
 
 [System.Serializable]
 public class RocketInfo
@@ -37,13 +38,17 @@ public class RocketControl : MonoBehaviour {
 	private GameObject m_exlposionAnimation;
 	private EngineControl m_engineControl;
 
-	public float f_currentHealth;
-	public bool b_isAlive = true;
+	private float m_currentHealth;
+	private bool m_isAlive = true;
+
+	public float HealthCurrent { get { return m_currentHealth; } }
+	public float HealthMax { get { return m_info.current_durability; } }
 
 	public void Reset()
 	{
-		b_isAlive = true;
-		f_currentHealth = m_info.current_durability;
+		m_isAlive = true;
+		m_currentHealth = m_info.current_durability;
+		WorldControl.GetInstance().CallHpChanged(m_currentHealth);
 
 		if (rocketObject)
 		{
@@ -54,18 +59,25 @@ public class RocketControl : MonoBehaviour {
 		{
 			destroyedRocketObject.SetActive(false);
 		}
+
+		if (m_engineControl)
+		{
+			m_engineControl.stopEngine();
+		}
 	}
-	// Update is called once per frame
+
 	void Update () 
 	{
-		if (b_isAlive)
+		if (m_isAlive && WorldControl.GetInstance().IsInGame && !WorldControl.GetInstance().IsPaused)
 		{
 			if (Input.GetButtonDown ("Jump")) 
 			{
 				m_engineControl.startEngine();
 			}
-			if (Input.GetButtonUp ("Jump")) 
+			if (Input.GetButtonUp("Jump"))
+			{
 				m_engineControl.stopEngine();
+			}
 
 			float rotation = Input.GetAxis ("Horizontal");
 			if (rotation != 0) {
@@ -113,7 +125,7 @@ public class RocketControl : MonoBehaviour {
 
 	void OnCollisionEnter2D(Collision2D myCollision) 
 	{   
-		if (b_isAlive && myCollision.otherCollider.name != rocketLanding.name) 
+		if (m_isAlive && myCollision.otherCollider.name != rocketLanding.name) 
 		{
 			if (exlposionAnimation)
 			{
@@ -125,20 +137,17 @@ public class RocketControl : MonoBehaviour {
 				m_exlposionAnimation.transform.position = transform.position;
 				m_exlposionAnimation.GetComponent<ParticleSystem>().Play();
 			}
-			f_currentHealth -= myCollision.relativeVelocity.magnitude;
-			if (f_currentHealth <= 0)
+			m_currentHealth -= myCollision.relativeVelocity.magnitude;
+			WorldControl.GetInstance().CallHpChanged(m_currentHealth);
+			if (m_currentHealth <= 0)
 			{
-				b_isAlive = false;
+				m_isAlive = false;
 				WorldControl wc = WorldControl.GetInstance();
 				if (wc != null)
 				{
 					wc.PlayOneShotFX(crashSound);
 					m_engineControl.stopEngine();
 					GetComponent<Rigidbody2D>().freezeRotation = false;
-
-					wc.ClearTempScore();
-					GameProgress.score -= (int)((cost + m_engineControl.cost) / 2);
-					wc.ShowScore();
 
 					if (destroyedRocketObject && rocketObject)
 					{
@@ -157,19 +166,18 @@ public class RocketControl : MonoBehaviour {
 		WorldControl wc = WorldControl.GetInstance();
 		if (wc != null)
 		{
-			if (b_isAlive && myCollision.gameObject.name == WorldControl.END_LOCATION_NAME)
+			if (m_isAlive && myCollision.gameObject.name == WorldControl.END_LOCATION_NAME)
 			{
 				//TODO не момнгьпбнпя победа а надо продержаться 2 секунды
 				wc.StartTimer(WorldControl.WIN_TIMER, true);
 			}
-			else if (b_isAlive && myCollision.tag == WorldControl.COLLECTIBLES_TAG)
+			else if (m_isAlive && myCollision.tag == WorldControl.COLLECTIBLES_TAG)
 			{
 				if (wc.getMap().GetComponent<MapInfo>().m_collectSound)
 				{
 					wc.PlayOneShotFX(wc.getMap().GetComponent<MapInfo>().m_collectSound);
 				}
 				GameObject.Destroy(myCollision.gameObject);
-				wc.AddScore(wc.GetMapInfo().m_coinCost);
 			}
 		}
 	}
@@ -179,7 +187,7 @@ public class RocketControl : MonoBehaviour {
 		WorldControl wc = WorldControl.GetInstance();
 		if (wc != null)
 		{
-			if (b_isAlive && myCollision.gameObject.name == WorldControl.END_LOCATION_NAME)
+			if (m_isAlive && myCollision.gameObject.name == WorldControl.END_LOCATION_NAME)
 			{
 				wc.StopTimer();
 			}
@@ -198,11 +206,6 @@ public class RocketControl : MonoBehaviour {
 		{
 			m_info.current_min_agility = min_agility;
 		}
-		WorldControl wc = WorldControl.GetInstance();
-		if (wc != null)
-		{
-			wc.AddScore(-agility_upgrade_cost);
-		}
 	}
 
 	public void upgradeHullMass()
@@ -211,11 +214,6 @@ public class RocketControl : MonoBehaviour {
 		if (m_info.current_min_mass < min_mass)
 		{
 			m_info.current_min_mass = min_mass;
-		}
-		WorldControl wc = WorldControl.GetInstance();
-		if (wc != null)
-		{
-			wc.AddScore(-mass_upgrade_cost);
 		}
 	}
 
@@ -227,5 +225,11 @@ public class RocketControl : MonoBehaviour {
 	public float getMass()
 	{
 		return m_info.mass;
+	}
+
+	public void KillRocketSilent()
+	{
+		m_isAlive = false;
+		m_currentHealth = 0.0f;
 	}
 }

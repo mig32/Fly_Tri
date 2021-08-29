@@ -10,9 +10,9 @@ public class WorldControl : MonoBehaviour
 	[SerializeField] private AudioSource m_playerAudioSource;
 	[SerializeField] private AudioSource m_soundAudioSource;
 
-	public event Action OnScoreUpdated;
 	public event Action<string> OnMessage;
 	public event Action<GameObject> OnRocketCreated;
+	public event Action<float> OnHPChanged;
 
 	public bool IsInGame { get; private set; }
 
@@ -24,7 +24,6 @@ public class WorldControl : MonoBehaviour
 	public const string ROCKET_CAMERA_NAME = "rocket_camera";
 	public const string PLAYER_OBJECT_NAME = "player";
 	public const string MESSAGE_OBJECT_NAME = "message";
-	public const string SCORE_OBJECT_NAME = "score_gui";
 	public const string START_LOCATION_NAME = "start_location";
 	public const string END_LOCATION_NAME = "end_location";
 	public const string COLLECTIBLES_TAG = "Collect";
@@ -39,6 +38,7 @@ public class WorldControl : MonoBehaviour
 	private int m_currentMapIdx = 0;
 	private Transform thisTransform;
 	private bool m_isPaused;
+	public bool IsPaused { get { return m_isPaused; } }
 	private float m_gameSpeed;
 	private float m_musicVolume = 0.8f;
 	private float m_fxVolume = 1.0f;
@@ -195,14 +195,13 @@ public class WorldControl : MonoBehaviour
 
 	public void EndLevel()
 	{//Уровень закончен - уничтожим карту и ракету
-		ClearTempScore();
 		if (m_map)
 		{
 			Destroy(m_map.gameObject);
 		}
 		m_rocket.transform.localRotation = Quaternion.identity;
 		m_rocket.transform.localPosition = new Vector3(0,0,0);
-		m_rocketControl.b_isAlive = false;
+		m_rocketControl.KillRocketSilent();
 		m_rocket.GetComponent<Rigidbody2D>().isKinematic = true;
 		m_rocket.SetActive(false);// .GetComponent<SpriteRenderer>().enabled = false;
 	}
@@ -294,11 +293,6 @@ public class WorldControl : MonoBehaviour
 		}
 	}
 
-	public bool IsPaused()
-	{
-		return m_isPaused;
-	}
-
 	public void setGameSpeed(float speed)
 	{
 		Mathf.Clamp (speed, MIN_GAME_SPEED, MAX_GAME_SPEED);
@@ -366,7 +360,7 @@ public class WorldControl : MonoBehaviour
 		return m_rocket;
 	}
 
-	public RocketControl getRocketControl()
+	public RocketControl GetRocketControl()
 	{
 		return m_rocketControl;
 	}
@@ -412,7 +406,7 @@ public class WorldControl : MonoBehaviour
 		}
 		else
 		{
-			OnMessage?.Invoke(Localization.T_LOSE_MESSAGE + ((int)((m_rocketControl.cost+m_rocketControl.getEngineControl().cost)/2)).ToString());
+			OnMessage?.Invoke("You broke you rocket. Try again.");
 		}
 	}
 
@@ -429,7 +423,6 @@ public class WorldControl : MonoBehaviour
 	{
 		if (isWinTimer)
 		{
-			SaveScore();
 			m_soundAudioSource.Stop();
 			GameProgress.SetMap(m_currentMapIdx, true);
 			LoadNextLevel();
@@ -502,36 +495,6 @@ public class WorldControl : MonoBehaviour
 		}
 	}
 
-	public void HideScore()
-	{
-		m_mainGUI.SetActive(false);
-	}
-	
-	public void ShowScore()
-	{
-		m_mainGUI.SetActive(true);
-	}
-	
-	public void AddScore(int score)
-	{
-		GameProgress.tempScore += score;
-		OnScoreUpdated?.Invoke();
-	}
-	
-	public void SaveScore()
-	{
-		GameProgress.score += GameProgress.tempScore;
-		GameProgress.tempScore = 0;
-		OnScoreUpdated?.Invoke();
-	}
-
-	public void ClearTempScore()
-	{
-		GameProgress.tempScore = 0;
-		OnScoreUpdated?.Invoke();
-	}
-	
-
 	void SetAllLists()
 	{
 		//Rockets
@@ -545,5 +508,10 @@ public class WorldControl : MonoBehaviour
 		AudioList.addAudio(m_audioNames[2], "Music/Вильгельм Рихард Вагнер - Воплощение ада и рая");
 		AudioList.addAudio(m_audioNames[3], "Music/Римский-Корсаков - Полет шмеля");
 		AudioList.addAudio(m_audioNames[4], "Music/Рихард Вагнер - Полет валькирий");
+	}
+
+	public void CallHpChanged(float value)
+	{
+		OnHPChanged?.Invoke(value);
 	}
 }
