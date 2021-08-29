@@ -121,12 +121,12 @@ public class WorldControl : MonoBehaviour
 
 	public void chooseEngine(string engineName)
 	{	
-		m_rocketControl.setEngine(RocketList.GetInstance().GetEnginePrefab(engineName));
+		m_rocketControl.SetEngine(RocketList.GetInstance().GetEnginePrefab(engineName));
 	}
 	
 	public void chooseEngine(GameObject engine)
 	{
-		m_rocketControl.setEngine(engine);
+		m_rocketControl.SetEngine(engine);
 	}
 
 	public void SetMapPhysicParametres()

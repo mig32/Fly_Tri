@@ -18,18 +18,21 @@ public class RocketControl : MonoBehaviour {
 	private GameObject m_engine;
 	private GameObject m_exlposionAnimation;
 	private EngineControl m_engineControl;
-
-	private float m_currentHealth;
 	private bool m_isAlive = true;
+	private bool m_enableControl = true;
 
-	public float HealthCurrent { get { return m_currentHealth; } }
+	public float HealthCurrent { get; private set; }
 	public float HealthMax { get { return m_durability; } }
+
+	private readonly int TeleportStart = Animator.StringToHash("StartTeleport");
+	private readonly int TeleportFinish = Animator.StringToHash("FinishTeleport");
 
 	public void Reset()
 	{
 		m_isAlive = true;
-		m_currentHealth = m_durability;
-		WorldControl.GetInstance().CallHpChanged(m_currentHealth);
+		m_enableControl = true;
+		HealthCurrent = m_durability;
+		WorldControl.GetInstance().CallHpChanged(HealthCurrent);
 
 		if (rocketObject)
 		{
@@ -49,29 +52,31 @@ public class RocketControl : MonoBehaviour {
 		GetComponent<Rigidbody2D>().mass = m_mass;
 	}
 
-	private void Update () 
+	private void Update() 
 	{
-		if (m_isAlive && WorldControl.GetInstance().IsInGame && !WorldControl.GetInstance().IsPaused)
+		if (!m_enableControl || !WorldControl.GetInstance().IsInGame || WorldControl.GetInstance().IsPaused)
 		{
-			var isEngine = Input.GetButton("Jump");
-			m_engineControl.SetEngineActive(isEngine);
+			return;
+		}
 
-			float rotation = Input.GetAxis ("Horizontal");
-			if (rotation != 0) 
+		var isEngine = Input.GetButton("Jump");
+		m_engineControl.SetEngineActive(isEngine);
+
+		float rotation = Input.GetAxis ("Horizontal");
+		if (rotation != 0) 
+		{
+			if (rotation > 0)
 			{
-				if (rotation > 0)
-				{
-					transform.Rotate(0, 0, -1 * (m_agility / (GetComponent<Rigidbody2D>().angularDrag / 3 + 1)) * Time.deltaTime);
-				}
-				else
-				{
-					transform.Rotate(0, 0, (m_agility / (GetComponent<Rigidbody2D>().angularDrag / 3 + 1)) * Time.deltaTime);
-				}
+				transform.Rotate(0, 0, -1 * (m_agility / (GetComponent<Rigidbody2D>().angularDrag / 3 + 1)) * Time.deltaTime);
+			}
+			else
+			{
+				transform.Rotate(0, 0, (m_agility / (GetComponent<Rigidbody2D>().angularDrag / 3 + 1)) * Time.deltaTime);
 			}
 		}
 	}
 
-	public void setEngine(GameObject engine)
+	public void SetEngine(GameObject engine)
 	{
 		//Debug.Log ("Set Engine old = " + m_engine);
 		GameObject temp_engine = GameObject.Instantiate (engine) as GameObject;
@@ -84,12 +89,12 @@ public class RocketControl : MonoBehaviour {
 		//Debug.Log ("Set Engine new = " + m_engine);
 	}
 
-	public GameObject getEngine()
+	public GameObject GetEngine()
 	{
 		return m_engine;
 	}
 
-	public EngineControl getEngineControl()
+	public EngineControl GetEngineControl()
 	{
 		return m_engineControl;
 	}
@@ -147,15 +152,16 @@ public class RocketControl : MonoBehaviour {
 	public void KillRocketSilent()
 	{
 		m_isAlive = false;
-		m_currentHealth = 0.0f;
+		m_enableControl = false;
+		HealthCurrent = 0.0f;
 	}
 
 	public void ApplyDamage(float damageAmount)
 	{
-		m_currentHealth -= damageAmount;
-		WorldControl.GetInstance().CallHpChanged(m_currentHealth);
+		HealthCurrent -= damageAmount;
+		WorldControl.GetInstance().CallHpChanged(HealthCurrent);
 
-		if (m_currentHealth <= 0)
+		if (HealthCurrent <= 0)
 		{
 			OnKilled();
 		}
@@ -164,7 +170,8 @@ public class RocketControl : MonoBehaviour {
 	private void OnKilled()
 	{
 		m_isAlive = false;
-		m_currentHealth = 0.0f;
+		m_enableControl = false;
+		HealthCurrent = 0.0f;
 
 		if (crashSound)
 		{
@@ -191,5 +198,40 @@ public class RocketControl : MonoBehaviour {
 	{
 		yield return new WaitForSeconds(2);
 		WorldControl.GetInstance().RestartFromCheckpoint();
+	}
+
+	public void StartTeleport()
+	{
+		m_enableControl = false;
+
+		var rigidbody = GetComponent<Rigidbody2D>();
+		rigidbody.isKinematic = true;
+		rigidbody.velocity = Vector3.zero;
+		rigidbody.angularVelocity = 0;
+
+		var animator = GetComponent<Animator>();
+		if (animator)
+		{
+			animator.SetTrigger(TeleportStart);
+		}
+	}
+	public void FinishTeleport()
+	{
+		var animator = GetComponent<Animator>();
+		if (animator)
+		{
+			animator.SetTrigger(TeleportFinish);
+		}
+		else
+		{
+			m_enableControl = true;
+			GetComponent<Rigidbody2D>().isKinematic = false;
+		}
+	}
+
+	public void OnFinishTeleportAnimEnded()
+	{
+		m_enableControl = true;
+		GetComponent<Rigidbody2D>().isKinematic = false;
 	}
 }

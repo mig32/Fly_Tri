@@ -85,6 +85,7 @@ GameObject:
   - component: {fileID: 11400000}
   - component: {fileID: 5000000}
   - component: {fileID: 6000000}
+  - component: {fileID: 1389960053521758255}
   m_Layer: 0
   m_Name: PaperRocket
   m_TagString: Rocket
@@ -194,6 +195,25 @@ PolygonCollider2D:
       - {x: -0.17213425, y: 0.31461304}
       - {x: -0.22307634, y: 0.19061948}
       - {x: -0.12574823, y: 0.16416284}
+--- !u!95 &1389960053521758255
+Animator:
+  serializedVersion: 3
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 100002}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 41671d271765a554eac94712c32ab8a8, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorControllerStateOnDisable: 0
 --- !u!1 &7578124001261611585
 GameObject:
   m_ObjectHideFlags: 0
@@ -287,7 +307,7 @@ GameObject:
   - component: {fileID: 1534268598107981037}
   - component: {fileID: 4571923997360345128}
   m_Layer: 0
-  m_Name: rocket3
+  m_Name: rocketSprite
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
