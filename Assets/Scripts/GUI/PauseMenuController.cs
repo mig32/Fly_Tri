@@ -21,7 +21,6 @@ public class PauseMenuController : MainMenuBase
     public void OnButtonEndLevelPressed()
     {
         WorldControl.GetInstance().EndLevel();
-        WorldControl.GetInstance().StopTimer();
 
         DialogsController.GetInstance().ShowDialog(DialogType.StartMenu);
         SetActive(false);

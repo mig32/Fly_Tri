@@ -39,7 +39,9 @@ public class WorldControl : MonoBehaviour
 	private float m_gameSpeed;
 	private float m_musicVolume = 0.8f;
 	private float m_fxVolume = 1.0f;
-
+	private int m_completedTargetZonesCount = 0;
+	private int m_savedCheckpoint = 0;
+	public int CurrentCheckpoint => m_savedCheckpoint;
 	private string[] m_rocketsNames;
 	private string[] m_enginesNames;
 	private string[] m_audioNames;
@@ -153,6 +155,7 @@ public class WorldControl : MonoBehaviour
 
 		m_mapPrefab = map;
 		m_currentMapIdx = -1;
+		ResetTempMapData();
 		LoadSelectedLevel();
 	}
 
@@ -162,14 +165,15 @@ public class WorldControl : MonoBehaviour
 		m_mapInfo = m_map.GetComponent<MapInfo> ();
 		m_map.transform.parent = thisTransform; //Удочерим ее
 		SetMapPhysicParametres();
-		GetRocket().transform.position = m_mapInfo.m_startLocation.position; // Поставим ракету на начельную позицию на карте
-		GetRocket().transform.rotation = m_mapInfo.m_startLocation.rotation; // Поставим ракету на начельную позицию на карте
+		var checkpoint = m_mapInfo.GetCheckpointPosition(m_savedCheckpoint);
+		GetRocket().transform.position = checkpoint.position; // Поставим ракету на начельную позицию на карте
+		GetRocket().transform.rotation = checkpoint.rotation; // Поставим ракету на начельную позицию на карте
 		GetRocket().SetActive(true);// .GetComponent<SpriteRenderer>().enabled = true;
 		m_rocket.GetComponent<Rigidbody2D>().isKinematic = false;
 		m_rocketControl.Reset();
 		SetPause(false);
 		IsInGame = true;
-		CheckAndActiateCheckpoints();
+		CheckAndActiateTargetZone();
 	}
 
 	public void EndLevel()
@@ -202,6 +206,7 @@ public class WorldControl : MonoBehaviour
 		}
 
 		m_currentMapIdx = levelIdx;
+		ResetTempMapData();
 		m_mapPrefab = mapPaths.GetMapPrefab();
 		LoadSelectedLevel();
 	}
@@ -226,6 +231,7 @@ public class WorldControl : MonoBehaviour
 			return;
 		}
 
+		ResetTempMapData();
 		MapInfo map_info = (mapPahs.GetMapPrefab()).GetComponent<MapInfo>();
 		map_info.m_mapName = mapPahs.Name;
 		map_info.m_mapIcon = mapPahs.GetMapIcon();
@@ -234,10 +240,16 @@ public class WorldControl : MonoBehaviour
 		DialogsController.GetInstance().ShowMapDescriptionMenu(m_currentMapIdx);
 	}
 
-	public void RestartLevel()
+	public void RestartFromCheckpoint()
 	{
 		EndLevel();
 		LoadSelectedLevel();
+	}
+
+	public void RestartLevel()
+	{
+		ResetTempMapData();
+		RestartFromCheckpoint();
 	}
 
 //=================================================================================== Map loaders
@@ -337,53 +349,31 @@ public class WorldControl : MonoBehaviour
 		return m_mapInfo;
 	}
 
-	public void StartTimer(float secons, bool isWinTimer)
-	{
-		m_isTimerStarted = true;
-		timer_time = secons;
-		m_isWinTimer = isWinTimer;
-		OnStartTimer(m_isWinTimer);
-	}
-
-	public void StopTimer()
-	{
-		m_isTimerStarted = false;
-	}
-
-	private void OnStartTimer(bool isWinTimer)
-	{
-		if (isWinTimer)
-		{
-			OnMessage?.Invoke(Localization.T_WIN_MESSAGE + " (" + string.Format("{0:0.00}", Mathf.Round (timer_time*100.0f)/100.0f) + ")");
-		}
-		else
-		{
-			OnMessage?.Invoke("You broke you rocket. Try again.");
-		}
-	}
-
-	private void OnTimerTick(bool isWinTimer)
-	{
-		if (isWinTimer)
-		{
-			string timeLeft = string.Format("{0:0.00}", Mathf.Round (timer_time*100.0f)/100.0f);
-			OnMessage?.Invoke(Localization.T_WIN_MESSAGE + " (" + timeLeft + ")");
-		}
-	}
-
 	public void ShowMessage(string message)
 	{
 		OnMessage?.Invoke(message);
 	}
 
-	public void OnCheckpointCollected()
+	private void ResetTempMapData()
 	{
-		CheckAndActiateCheckpoints();
+		m_savedCheckpoint = 0;
+		m_completedTargetZonesCount = 0;
 	}
 
-	private void CheckAndActiateCheckpoints()
+	public void OnCheckpointSaved(int idx)
 	{
-		var checkpoint = m_mapInfo.GetNextCheckpoint();
+		m_savedCheckpoint = idx;
+	}
+
+	public void OnTargetZoneChecked()
+	{
+		++m_completedTargetZonesCount;
+		CheckAndActiateTargetZone();
+	}
+
+	private void CheckAndActiateTargetZone()
+	{
+		var checkpoint = m_mapInfo.GetNextTargetZone();
 		if (checkpoint != null)
 		{
 			checkpoint.Activate();
@@ -395,32 +385,8 @@ public class WorldControl : MonoBehaviour
 		}
 	}
 
-	private void OnStopTimer(bool isWinTimer)
-	{
-		if (isWinTimer)
-		{
-			GameProgress.SetMap(m_currentMapIdx, true);
-			LoadNextLevel();
-		}
-		else
-		{
-			RestartLevel();
-		}
-	}
-
 	void Update()
 	{
-		if (m_isTimerStarted)
-		{
-			timer_time -= Time.deltaTime;
-			if (timer_time <= 0)
-			{
-				StopTimer();
-				OnStopTimer (m_isWinTimer);
-			}
-			OnTimerTick(m_isWinTimer);
-		}
-
 		if (IsInGame && Input.GetKeyDown(KeyCode.Escape))
 		{
 			SetPause(!m_isPaused); 

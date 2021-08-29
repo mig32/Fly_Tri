@@ -17,11 +17,19 @@ public class MapInfo : MonoBehaviour
 	public Sprite m_miniImage;
 	public AudioClip m_music;
 	public AudioClip m_collectSound;
-	public Transform m_startLocation;
-	public List<TriggerEndZone> m_targetLocations;
+	[SerializeField] private List<TriggerCheckpoint> m_checkpoints;
+	[SerializeField] private List<TriggerTargetZone> m_targetLocations;
 
-	private void Start () 
+	private void Awake() 
 	{
+		if (m_checkpoints != null && m_checkpoints.Any())
+		{
+			for (int i = 0; i < m_checkpoints.Count; ++i)
+			{
+				m_checkpoints[i].SetIdx(i);
+			}
+		}
+
 		if (m_miniImage = null) 
 		{
 			m_miniImage = MapsHelper.GetDefaultMiniMap();
@@ -33,18 +41,44 @@ public class MapInfo : MonoBehaviour
 		}
 	}
 
-	public TriggerEndZone GetNextCheckpoint()
+	public Transform GetCheckpointPosition(int idx)
+	{
+		if (idx >= m_checkpoints.Count || idx < 0)
+		{
+			return null;
+		}
+
+		return m_checkpoints[idx].transform;
+	}
+
+	public void MarkCheckedTrgetZones(int zonesAmount)
+	{
+		if (zonesAmount <= 0)
+		{
+			return;
+		}
+
+		for (int i = 0; i <= zonesAmount && i < m_targetLocations.Count - 1; ++i)
+		{
+			m_targetLocations[i].MarkAsChecked();
+		}
+	}
+	
+	public TriggerTargetZone GetNextTargetZone()
 	{
 		return m_targetLocations.FirstOrDefault(endZone => !endZone.IsChecked);
 	}
 
 	public void OnDrawGizmos()
 	{
-		if (m_startLocation != null)
+		if (m_checkpoints != null && m_checkpoints.Any())
 		{
-			var pos = m_startLocation.position;
-			pos.y += 0.4f;
-			Gizmos.DrawIcon(pos, "StartLocationGizmo.jpg", true);
+			foreach (var pstartPos in m_checkpoints)
+			{
+				var pos = pstartPos.transform.position;
+				pos.y += 0.4f;
+				Gizmos.DrawIcon(pos, "StartLocationGizmo.jpg", true);
+			}
 		}
 
 		if (m_targetLocations != null && m_targetLocations.Any())

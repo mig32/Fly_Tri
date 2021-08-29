@@ -183,6 +183,13 @@ public class RocketControl : MonoBehaviour {
 			rocketObject.SetActive(false);
 		}
 
-		WorldControl.GetInstance().StartTimer(2.0f, false);
+		WorldControl.GetInstance().ShowMessage("You broke you rocket. Try again.");
+		StartCoroutine(RestartCrt());
+	}
+
+	private IEnumerator RestartCrt()
+	{
+		yield return new WaitForSeconds(2);
+		WorldControl.GetInstance().RestartFromCheckpoint();
 	}
 }

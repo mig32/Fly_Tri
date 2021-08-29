@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(Collider2D))]
-public class TriggerEndZone : TriggerBase
+public class TriggerTargetZone : TriggerBase
 {
     private enum State
     {
@@ -66,7 +66,7 @@ public class TriggerEndZone : TriggerBase
             }
             m_collider.enabled = false;
             WorldControl.GetInstance().ShowMessage("Checkpoint collected!");
-            WorldControl.GetInstance().OnCheckpointCollected();
+            WorldControl.GetInstance().OnTargetZoneChecked();
         }
         else
         {
@@ -88,5 +88,11 @@ public class TriggerEndZone : TriggerBase
         }
 
         WorldControl.GetInstance().ShowMessage("Checkpoint activated!");
+    }
+
+    public void MarkAsChecked()
+    {
+        m_state = State.Checked;
+        m_particleSystem.Stop();
     }
 }
