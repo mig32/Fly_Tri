@@ -39,17 +39,7 @@ public class TriggerTargetZone : TriggerBase
         m_timeLeft = m_timer;
     }
 
-    public override void OnTrigerExit(RocketControl rocket)
-    {
-        if (m_state != State.Timer)
-        {
-            return;
-        }
-
-        m_state = State.Active;
-    }
-
-    private void Update()
+    public override void OnTrigerStay(RocketControl rocket)
     {
         if (m_state != State.Timer)
         {
@@ -72,6 +62,16 @@ public class TriggerTargetZone : TriggerBase
         {
             WorldControl.GetInstance().ShowMessage("Checkpoint will be collected in (" + string.Format("{0:0.00}", Mathf.Round(m_timeLeft * 100.0f) / 100.0f) + ")");
         }
+    }
+
+    public override void OnTrigerExit(RocketControl rocket)
+    {
+        if (m_state != State.Timer)
+        {
+            return;
+        }
+
+        m_state = State.Active;
     }
 
     public void Activate()

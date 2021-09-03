@@ -19,7 +19,6 @@ public class CameraControl : MonoBehaviour {
 		m_rocket = rocket;
 	}
 
-	// Update is called once per frame
 	void LateUpdate () 
 	{
 		if (m_rocket != null)
@@ -30,13 +29,11 @@ public class CameraControl : MonoBehaviour {
 		float zoom = Input.GetAxis("Mouse ScrollWheel");
 		if (zoom != 0.0f)
 		{
-			zooming(zoom);
-			//Debug.Log(zoom);
+			Zooming(zoom);
 		}
-
 	}
 
-	private void zooming(float zoom)
+	private void Zooming(float zoom)
 	{
 		m_zoom -= zoom;
 		if (m_zoom > MAX_ZOOM)

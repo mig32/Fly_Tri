@@ -48,9 +48,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_mapName: map1
   m_mapGravity: 1
-  m_mapDrag: 2
+  m_mapDrag: 5
   m_mapFriction: 1
-  m_mapBounciness: 0.2
+  m_mapBounciness: 1
   m_mapDiscription: TiledMap1
   m_coinCost: 100
   m_mapIcon: {fileID: 0}

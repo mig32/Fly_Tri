@@ -51,14 +51,14 @@ public class MapInfo : MonoBehaviour
 		return m_checkpoints[idx].transform;
 	}
 
-	public void MarkCheckedTrgetZones(int zonesAmount)
+	public void MarkCheckedTargetZones(int zonesAmount)
 	{
 		if (zonesAmount <= 0)
 		{
 			return;
 		}
 
-		for (int i = 0; i <= zonesAmount && i < m_targetLocations.Count - 1; ++i)
+		for (int i = 0; i < zonesAmount && i < m_targetLocations.Count - 1; ++i)
 		{
 			m_targetLocations[i].MarkAsChecked();
 		}

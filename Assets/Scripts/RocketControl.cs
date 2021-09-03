@@ -133,6 +133,22 @@ public class RocketControl : MonoBehaviour {
 		trigger.OnTriggered(this);
 	}
 
+	private void OnTriggerStay2D(Collider2D myCollision)
+	{
+		if (!m_isAlive)
+		{
+			return;
+		}
+
+		var trigger = myCollision.gameObject.GetComponent<TriggerBase>();
+		if (trigger == null)
+		{
+			return;
+		}
+
+		trigger.OnTrigerStay(this);
+	}
+
 	void OnTriggerExit2D(Collider2D myCollision)
 	{
 		if (!m_isAlive)

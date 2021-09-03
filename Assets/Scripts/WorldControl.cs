@@ -161,14 +161,14 @@ public class WorldControl : MonoBehaviour
 
 	private void LoadSelectedLevel()
 	{
-		m_map = GameObject.Instantiate (m_mapPrefab) as GameObject; //Загрузим карту
-		m_mapInfo = m_map.GetComponent<MapInfo> ();
-		m_map.transform.parent = thisTransform; //Удочерим ее
+		m_map = Instantiate(m_mapPrefab, thisTransform); //Загрузим карту
+		m_mapInfo = m_map.GetComponent<MapInfo>();
+		m_mapInfo.MarkCheckedTargetZones(m_completedTargetZonesCount);
 		SetMapPhysicParametres();
 		var checkpoint = m_mapInfo.GetCheckpointPosition(m_savedCheckpoint);
 		GetRocket().transform.position = checkpoint.position; // Поставим ракету на начельную позицию на карте
 		GetRocket().transform.rotation = checkpoint.rotation; // Поставим ракету на начельную позицию на карте
-		GetRocket().SetActive(true);// .GetComponent<SpriteRenderer>().enabled = true;
+		GetRocket().SetActive(true);
 		m_rocket.GetComponent<Rigidbody2D>().isKinematic = false;
 		m_rocketControl.Reset();
 		SetPause(false);

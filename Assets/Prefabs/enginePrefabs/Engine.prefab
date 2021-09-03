@@ -46,7 +46,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_name: 
-  m_power: 300
+  m_power: 1000
   m_image: {fileID: 0}
   m_engineStartSound: {fileID: 0}
   m_engineWorkingSound: {fileID: 8300000, guid: f5da8bf1017106347b73db99ba093c0c,
