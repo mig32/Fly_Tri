@@ -76,8 +76,16 @@ public class MapInfo : MonoBehaviour
 			foreach (var pstartPos in m_checkpoints)
 			{
 				var pos = pstartPos.transform.position;
-				pos.y += 0.4f;
-				Gizmos.DrawIcon(pos, "StartLocationGizmo.jpg", true);
+				pos.y += 1.2f;
+				Gizmos.DrawIcon(pos, "StartLocationGizmo.psd", true);
+				Gizmos.color = Color.black;
+				Gizmos.DrawWireCube(pos, new Vector3(1.91f, 3.19f, 1));
+				Gizmos.color = Color.white;
+				Gizmos.DrawWireCube(pos, new Vector3(1.92f, 3.2f, 1));
+				Gizmos.color = Color.black;
+				Gizmos.DrawWireCube(pos, new Vector3(1.93f, 3.21f, 1));
+				Gizmos.color = Color.white;
+				Gizmos.DrawWireCube(pos, new Vector3(1.94f, 3.22f, 1));
 			}
 		}
 

@@ -3,20 +3,21 @@ using System.Collections;
 
 public class CameraControl : MonoBehaviour {
 
-	private float m_zoom = 3.0f;
-	public const float MAX_ZOOM = 6.0f;
-	public const float MIN_ZOOM = 0.7f;
+	[SerializeField] private float m_zoom = 10.0f;
+	[SerializeField] private float m_maxZoom = 20.0f;
+	[SerializeField] private float m_minZoom = 2.0f;
 
-	private GameObject m_rocket;
+	private RocketControl m_rocket;
 
 	public void Start()
 	{
 		WorldControl.GetInstance().OnRocketCreated += OnRocketCreated;
 	}
 
-	public void OnRocketCreated(GameObject rocket)
+	public void OnRocketCreated(RocketControl rocket)
 	{
 		m_rocket = rocket;
+		GetComponent<Camera>().orthographicSize = m_zoom;
 	}
 
 	void LateUpdate () 
@@ -29,20 +30,20 @@ public class CameraControl : MonoBehaviour {
 		float zoom = Input.GetAxis("Mouse ScrollWheel");
 		if (zoom != 0.0f)
 		{
-			Zooming(zoom);
+			Zooming(zoom * 10);
 		}
 	}
 
 	private void Zooming(float zoom)
 	{
 		m_zoom -= zoom;
-		if (m_zoom > MAX_ZOOM)
+		if (m_zoom > m_maxZoom)
 		{
-			m_zoom = MAX_ZOOM;
+			m_zoom = m_maxZoom;
 		}
-		else if (m_zoom < MIN_ZOOM)
+		else if (m_zoom < m_minZoom)
 		{
-			m_zoom = MIN_ZOOM;
+			m_zoom = m_minZoom;
 		}
 		GetComponent<Camera>().orthographicSize = m_zoom;
 	}

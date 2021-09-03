@@ -17,18 +17,17 @@ public class HpController : MonoBehaviour
         WorldControl.GetInstance().OnHPChanged += OnValueChanged;
         WorldControl.GetInstance().OnRocketCreated += OnRocketCreated;
 
-        var rocket = WorldControl.GetInstance().GetRocket();
+        var rocket = WorldControl.GetInstance().GetRocketControl();
         if (rocket)
         {
             OnRocketCreated(rocket);
         }
     }
 
-    public void OnRocketCreated(GameObject rocket)
+    public void OnRocketCreated(RocketControl rocket)
     {
-        var rocketControl = rocket.GetComponent<RocketControl>();
-        m_maxValue = rocketControl.HealthMax;
-        OnValueChanged(rocketControl.HealthCurrent);
+        m_maxValue = rocket.HealthMax;
+        OnValueChanged(rocket.HealthCurrent);
     }
 
     private int ValueForGui(float value)

@@ -8,7 +8,7 @@ public class WorldControl : MonoBehaviour
 	[SerializeField] private Transform m_playerTransform;
 
 	public event Action<string> OnMessage;
-	public event Action<GameObject> OnRocketCreated;
+	public event Action<RocketControl> OnRocketCreated;
 	public event Action<float> OnHPChanged;
 
 	public bool IsInGame { get; private set; }
@@ -42,16 +42,14 @@ public class WorldControl : MonoBehaviour
 	private int m_completedTargetZonesCount = 0;
 	private int m_savedCheckpoint = 0;
 	public int CurrentCheckpoint => m_savedCheckpoint;
-	private string[] m_rocketsNames;
-	private string[] m_enginesNames;
 	private string[] m_audioNames;
 
 	private GameObject m_mapPrefab;
 	private GameObject m_map;
 	private MapInfo m_mapInfo;
-	private GameObject m_rocket;
 	private RocketControl m_rocketControl;
 	public MapList MapList { get; private set; }
+	public RocketList RocketList { get; private set; }
 	public SoundController soundController { get; private set; }
 	private static WorldControl m_instance;
 
@@ -65,6 +63,7 @@ public class WorldControl : MonoBehaviour
 
 		m_instance = this;
 		MapList = GetComponent<MapList>();
+		RocketList = GetComponent<RocketList>();
 		soundController = GetComponent<SoundController>();
 	}
 
@@ -93,55 +92,31 @@ public class WorldControl : MonoBehaviour
 	{
 		Localization.selectLanguage ("RU");
 		m_gameSpeed = 1.0f;
-		chooseRocket (m_rocketsNames[0]);
-		chooseEngine (m_enginesNames[0]);
+
+		var rocketPrefab = RocketList.GetRocketPrefab(0);
+		var enginePrefab = RocketList.GetEnginePrefab(0);
+		m_rocketControl = RocketControl.Create(rocketPrefab, enginePrefab, m_playerTransform);
+		OnRocketCreated?.Invoke(m_rocketControl);
+
 		soundController.PlayMusic(Resources.Load< AudioClip>(AudioList.getAudioPath (getAudioNames() [0])));
 
 		SetPause(true);
-	}
-
-	private void InstantiateRocket(GameObject rocket)
-	{
-		m_rocket = GameObject.Instantiate<GameObject>(rocket, m_playerTransform);
-		m_rocket.GetComponent<Rigidbody2D>().isKinematic = true;
-		m_rocketControl = m_rocket.GetComponent<RocketControl>();
-		OnRocketCreated?.Invoke(m_rocket);
-	}
-
-	public void chooseRocket(string rocketName)
-	{	
-		GameObject rocket = RocketList.GetInstance().GetRocketPrefab(rocketName);
-		InstantiateRocket(rocket);
-	}
-
-	public void chooseRocket(GameObject rocket)
-	{
-		InstantiateRocket(rocket);
-	}
-
-	public void chooseEngine(string engineName)
-	{	
-		m_rocketControl.SetEngine(RocketList.GetInstance().GetEnginePrefab(engineName));
-	}
-	
-	public void chooseEngine(GameObject engine)
-	{
-		m_rocketControl.SetEngine(engine);
 	}
 
 	public void SetMapPhysicParametres()
 	{
 		if (m_mapInfo)
 		{
-			GetRocket().GetComponent<Rigidbody2D>().angularDrag = GetRocket().GetComponent<Rigidbody2D>().drag = m_mapInfo.m_mapDrag;
-			GetRocket().GetComponent<Rigidbody2D>().gravityScale = m_mapInfo.m_mapGravity;
+			m_rocketControl.GetComponent<Rigidbody2D>().angularDrag = m_mapInfo.m_mapDrag;
+			m_rocketControl.GetComponent<Rigidbody2D>().drag = m_mapInfo.m_mapDrag;
+			m_rocketControl.GetComponent<Rigidbody2D>().gravityScale = m_mapInfo.m_mapGravity;
 
 			var material = new PhysicsMaterial2D();
 			material.bounciness = m_mapInfo.m_mapBounciness;
 			material.friction = m_mapInfo.m_mapFriction;
-			Collider2D rocketLanding = GetRocket().GetComponent<RocketControl>().rocketLanding;
+			Collider2D rocketLanding = m_rocketControl.rocketLanding;
 			rocketLanding.sharedMaterial = material;
-			GetRocket().GetComponent<Collider2D>().sharedMaterial = material;
+			m_rocketControl.GetComponent<Collider2D>().sharedMaterial = material;
 		}
 	}
 
@@ -166,10 +141,10 @@ public class WorldControl : MonoBehaviour
 		m_mapInfo.MarkCheckedTargetZones(m_completedTargetZonesCount);
 		SetMapPhysicParametres();
 		var checkpoint = m_mapInfo.GetCheckpointPosition(m_savedCheckpoint);
-		GetRocket().transform.position = checkpoint.position; // Поставим ракету на начельную позицию на карте
-		GetRocket().transform.rotation = checkpoint.rotation; // Поставим ракету на начельную позицию на карте
-		GetRocket().SetActive(true);
-		m_rocket.GetComponent<Rigidbody2D>().isKinematic = false;
+		m_rocketControl.transform.position = checkpoint.position; // Поставим ракету на начельную позицию на карте
+		m_rocketControl.transform.rotation = checkpoint.rotation; // Поставим ракету на начельную позицию на карте
+		m_rocketControl.gameObject.SetActive(true);
+		m_rocketControl.GetComponent<Rigidbody2D>().isKinematic = false;
 		m_rocketControl.Reset();
 		SetPause(false);
 		IsInGame = true;
@@ -185,11 +160,11 @@ public class WorldControl : MonoBehaviour
 
 		soundController.StopEngineSound();
 
-		m_rocket.transform.localRotation = Quaternion.identity;
-		m_rocket.transform.localPosition = new Vector3(0,0,0);
+		m_rocketControl.transform.localRotation = Quaternion.identity;
+		m_rocketControl.transform.localPosition = new Vector3(0,0,0);
 		m_rocketControl.KillRocketSilent();
-		m_rocket.GetComponent<Rigidbody2D>().isKinematic = true;
-		m_rocket.SetActive(false);// .GetComponent<SpriteRenderer>().enabled = false;
+		m_rocketControl.GetComponent<Rigidbody2D>().isKinematic = true;
+		m_rocketControl.gameObject.SetActive(false);
 	}
 
 	public void LoadLevel(int levelIdx)
@@ -254,16 +229,6 @@ public class WorldControl : MonoBehaviour
 
 //=================================================================================== Map loaders
 
-	public string[] getRocketsNames()
-	{
-		return m_rocketsNames;
-	}
-
-	public string[] getEnginesNames()
-	{
-		return m_enginesNames;
-	}
-
 	public string[] getAudioNames()
 	{
 		return m_audioNames;
@@ -317,11 +282,6 @@ public class WorldControl : MonoBehaviour
 	public float GetMusicVolume()
 	{
 		return soundController.MusicVolume;
-	}
-
-	public GameObject GetRocket()
-	{
-		return m_rocket;
 	}
 
 	public RocketControl GetRocketControl()
@@ -395,10 +355,6 @@ public class WorldControl : MonoBehaviour
 
 	void SetAllLists()
 	{
-		//Rockets
-		m_rocketsNames = RocketList.GetInstance().GetRocketNamesList();
-		m_enginesNames = RocketList.GetInstance().GetEngineNamesList();
-
 		//Audio
 		m_audioNames = new string[5] {"DontWorry", "DerWienerWalzer", "HevenAndHell", "BeeFly", "ValkyriFly"};
 		AudioList.addAudio(m_audioNames[0], "Music/Bobby McFerrin - Don't Worry, Be Happy");

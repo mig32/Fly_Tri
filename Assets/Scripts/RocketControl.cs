@@ -7,15 +7,14 @@ public class RocketControl : MonoBehaviour {
 	[SerializeField] private float m_agility;
 	[SerializeField] private float m_mass;
 	[SerializeField] private float m_durability;
+	[SerializeField] private Transform m_rotatingPosition;
 
 	public AudioClip crashSound;
 	public GameObject exlposionAnimation;
 
-	public Sprite rocketSprite;
 	public GameObject rocketObject;
 	public GameObject destroyedRocketObject;
 	public Collider2D rocketLanding;
-	private GameObject m_engine;
 	private GameObject m_exlposionAnimation;
 	private EngineControl m_engineControl;
 	private bool m_isAlive = true;
@@ -26,6 +25,21 @@ public class RocketControl : MonoBehaviour {
 
 	private readonly int TeleportStart = Animator.StringToHash("StartTeleport");
 	private readonly int TeleportFinish = Animator.StringToHash("FinishTeleport");
+
+	public static RocketControl Create(RocketControl rocketPrefab, EngineControl enginePrefab, Transform targetTransform)
+	{
+		var rocket = Instantiate(rocketPrefab, targetTransform);
+		rocket.SetEngine(enginePrefab);
+		return rocket;
+	}
+
+	private void SetEngine(EngineControl engine)
+	{
+		m_engineControl = Instantiate(engine, transform);
+		m_engineControl.transform.localPosition = new Vector3(0, 0, 0);
+		m_engineControl.transform.localRotation = Quaternion.identity;
+		m_engineControl.PhysicBody = GetComponent<Rigidbody2D>();
+	}
 
 	public void Reset()
 	{
@@ -50,6 +64,7 @@ public class RocketControl : MonoBehaviour {
 	private void Start()
 	{
 		GetComponent<Rigidbody2D>().mass = m_mass;
+		GetComponent<Rigidbody2D>().isKinematic = true;
 	}
 
 	private void Update() 
@@ -62,36 +77,12 @@ public class RocketControl : MonoBehaviour {
 		var isEngine = Input.GetButton("Jump");
 		m_engineControl.SetEngineActive(isEngine);
 
-		float rotation = Input.GetAxis ("Horizontal");
+		float rotation = Input.GetAxis("Horizontal");
 		if (rotation != 0) 
 		{
-			if (rotation > 0)
-			{
-				transform.Rotate(0, 0, -1 * (m_agility / (GetComponent<Rigidbody2D>().angularDrag / 3 + 1)) * Time.deltaTime);
-			}
-			else
-			{
-				transform.Rotate(0, 0, (m_agility / (GetComponent<Rigidbody2D>().angularDrag / 3 + 1)) * Time.deltaTime);
-			}
+			var sign = rotation > 0 ? -1 : 1;
+			transform.Rotate(0, 0, sign * Time.deltaTime * (1 + m_agility / GetComponent<Rigidbody2D>().angularDrag), Space.Self);
 		}
-	}
-
-	public void SetEngine(GameObject engine)
-	{
-		//Debug.Log ("Set Engine old = " + m_engine);
-		GameObject temp_engine = GameObject.Instantiate (engine) as GameObject;
-		m_engine = temp_engine; 
-		m_engine.transform.parent = transform;
-		m_engine.transform.localPosition = new Vector3(0,0,0);
-		m_engine.transform.localRotation = Quaternion.identity;
-		m_engineControl = m_engine.GetComponent<EngineControl> ();
-
-		//Debug.Log ("Set Engine new = " + m_engine);
-	}
-
-	public GameObject GetEngine()
-	{
-		return m_engine;
 	}
 
 	public EngineControl GetEngineControl()
@@ -107,10 +98,10 @@ public class RocketControl : MonoBehaviour {
 			{
 				if (m_exlposionAnimation == null)
 				{
-					m_exlposionAnimation = GameObject.Instantiate(exlposionAnimation) as GameObject;
+					m_exlposionAnimation = Instantiate(exlposionAnimation, transform);
 				}
 
-				m_exlposionAnimation.transform.position = transform.position;
+				m_exlposionAnimation.transform.position = myCollision.GetContact(0).point;
 				m_exlposionAnimation.GetComponent<ParticleSystem>().Play();
 			}
 			ApplyDamage(myCollision.relativeVelocity.magnitude);

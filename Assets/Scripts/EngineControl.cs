@@ -10,6 +10,7 @@ public class EngineControl : MonoBehaviour
 	[SerializeField] protected AudioClip m_engineStopSound;
 
 	private bool m_isEngineWorking = false;
+	public Rigidbody2D PhysicBody { private get; set; }
 
 	void Start()
 	{
@@ -79,7 +80,7 @@ public class EngineControl : MonoBehaviour
 
 	public virtual void OnEngineWorking()
 	{
-		transform.parent.GetComponent<Rigidbody2D>().AddForce ((Vector2)transform.parent.up * m_power * Time.deltaTime);
+		PhysicBody.AddForce((Vector2)transform.parent.up * m_power * Time.deltaTime);
 	}
 //=======================================================
 
