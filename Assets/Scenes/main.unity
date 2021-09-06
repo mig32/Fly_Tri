@@ -1142,6 +1142,9 @@ MonoBehaviour:
   - Name: Map 1
     PrefabPath: Prefabs/mapPrefabs/TestMap
     IconPath: Images/maps/map1_logo
+  - Name: Map 2
+    PrefabPath: Prefabs/mapPrefabs/2
+    IconPath: Images/maps/map1_logo
 --- !u!114 &1549570636
 MonoBehaviour:
   m_ObjectHideFlags: 0
